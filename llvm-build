@@ -34,6 +34,7 @@ Options:
   --install          Install after build (off by default).
   -g, --debug        Build unoptimized compiler (for debugging).
   --external-rt      Build external compiler-rt.
+  --targets t1,...   List of targets to build (or "all"); default is x64 only.
   --test             Run check-all after successful build.
 
 EOF
@@ -72,6 +73,10 @@ while true; do
   --test)
     TEST=1
     shift
+    ;;
+  --targets)
+    CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_TARGETS_TO_BUILD=$2"
+    shift 2
     ;;
   --external-rt)
     CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON"
