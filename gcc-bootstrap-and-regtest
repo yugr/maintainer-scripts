@@ -1,0 +1,204 @@
+#!/bin/sh
+
+# This script bootstraps normal and patched versions of GCC,
+# runs regression tests and compares results.
+
+set -e
+
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
+error() {
+  echo >&2 "$(basename $0): error: $@"
+  exit 1
+}
+
+mkcleandir() {
+  mkdir -p "$1"
+  rm -rf "$1"/*
+}
+
+isemptydir() {
+  #test $(ls -A "$1" | wc -l) = 0
+  test -d "$1" && test $(find "$1" -maxdepth 0 -empty)
+}
+
+curtime() {
+  date '+%s'
+}
+
+pretty_time() {
+  stime=$1
+  etime=$(curtime)
+  dt=$(($etime - $stime))
+  s=$(($dt % 60))
+  m=$((($dt / 60) % 60))
+  h=$(($dt / 60 / 60))
+  printf '%d:%02d:%02d' $h $m $s
+}
+
+P=x86_64-unknown-linux-gnu
+
+gcc_configure() {
+  SRC=$1
+  BUILD=$2
+
+  sleep 1
+
+  cd $BUILD
+  if ! isemptydir .; then
+    error 'build directory not empty'
+  fi
+
+  # TODO: --enable-checking=all ?
+  $SRC/configure --enable-checking --enable-bootstrap \
+    --target=$P --host=$P --build=$P \
+    $CFGFLAGS
+}
+
+gcc_build() {
+  BUILD=$1
+  NJOBS=$2
+  nice make -C $BUILD -j$NJOBS
+}
+
+gcc_check() {
+  BUILD=$1
+  NJOBS=$2
+  nice make -C $BUILD -j$NJOBS -k check || true
+}
+
+gcc_compare() {
+  SRC=$1
+  BUILD=$2
+  BUILD_P=$3
+  for sum in $(cd $BUILD; find -name \*.sum); do
+    echo "========== Comparing $sum"
+    $SRC/contrib/dg-cmp-results.sh -v -v \* $BUILD/$sum $BUILD_P/$sum
+  done 2>&1
+}
+
+is_gcc_dir() {
+  test -d "$1" && test -f "$1"/gcc/gcc.c
+}
+
+tic() {
+  TIME_START=$(date)
+  echo "Started $1: $TIME_START" >> $TOP/times.log
+}
+
+toc() {
+  TIME_END=$(date)
+  echo "Finished $1: $TIME_END" >> $TOP/times.log
+  DT=$(($(date +%s -d "$TIME_END") - $(date +%s -d "$TIME_START")))
+  echo "Total time is $(($DT / 60)) minutes." >> $TOP/times.log
+}
+
+me=$(basename $0)
+
+if [ $# -eq 0 ]; then
+  echo "Syntax: $me [config-flags] patch-or-dir"
+  echo "To override default tmp dir use TOP environment variable."
+  exit 1
+fi
+
+SRC=$(pwd)
+
+CFGFLAGS=
+PATCH=
+for opt in $@; do
+  if test -f "$opt" && file "$opt" | grep -q 'diff output'; then
+    # That's a patch
+    PATCH=$(absolutize "$opt")
+  elif is_gcc_dir "$opt"; then
+    # That's a directory with sources
+    PATCH=$(absolutize "$opt")
+  elif git rev-parse -q --verify $opt > /dev/null; then
+    # That's head name
+    PATCH="$opt"
+  else
+    CFGFLAGS="$CFGFLAGS $opt"
+  fi
+done
+
+if [ -z "$PATCH" ]; then
+  error 'no patch specified'
+fi
+
+if ! is_gcc_dir .; then
+  error 'curdir is not GCC dir'
+fi
+
+if [ master != $(git rev-parse --abbrev-ref HEAD) ]; then
+  echo >&2 'Current branch is not master!'
+fi
+
+if test -z "$TOP"; then
+  TOP=/tmp/$me-$USER-$$
+fi
+mkcleandir $TOP
+
+echo "Temporary files will be stored in $TOP"
+
+BUILD=$TOP/build-orig
+mkcleandir $BUILD
+
+BUILD_P=$TOP/build-patched
+mkcleandir $BUILD_P
+
+NJOBS=$(( $(grep -c '^processor' /proc/cpuinfo) * 3 / 2 ))
+NJOBS=$(( $NJOBS / 2 ))
+
+#if [ ! -d $SRC/mpfr -o ! -d $SRC/gmp -o ! -d $SRC/mpc -o ! -d $SRC/isl -o ! -d $SRC/cloog ]; then
+#  echo 'Downloading libs...'
+#  ( cd $SRC; contrib/download_prerequisites )
+#fi
+
+if [ -d $PATCH ]; then
+  SRC_P=$PATCH
+else
+  SRC_P=$TOP/src-patched
+  echo 'Copying...'
+  mkcleandir $SRC_P
+  if [ -f $PATCH ]; then
+    cp -r $SRC/* $SRC_P
+    patch -d $SRC_P -p1 < $PATCH
+  else
+    # Git head
+    git archive $PATCH | tar -x -C $SRC_P
+  fi
+fi
+
+echo 'Configuring...'
+gcc_configure $SRC $BUILD > $TOP/configure-orig.log 2>&1 &
+gcc_configure $SRC_P $BUILD_P > $TOP/configure-patched.log 2>&1 &
+wait %1 %2   # Errors are not detected without '%1 %2'
+
+echo 'Building...'
+tic build
+gcc_build $BUILD $NJOBS > $TOP/build-orig.log 2>&1 &
+gcc_build $BUILD_P $NJOBS > $TOP/build-patched.log 2>&1 &
+wait %1 %2
+toc build
+
+# GCC people ask us to test i386 as well...
+echo 'Checking (32-bit)...'
+tic 'checking (32-bit)'
+RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD $NJOBS > $TOP/check-orig-32.log 2>&1 &
+RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD_P $NJOBS > $TOP/check-patched-32.log 2>&1 &
+wait %1 %2
+gcc_compare $SRC $BUILD $BUILD_P | tee $TOP/compare-32.log
+toc 'checking (32-bit)'
+
+echo 'Checking...'
+tic checking
+gcc_check $BUILD $NJOBS > $TOP/check-orig.log 2>&1 &
+gcc_check $BUILD_P $NJOBS > $TOP/check-patched.log 2>&1 &
+wait %1 %2
+gcc_compare $SRC $BUILD $BUILD_P | tee $TOP/compare.log
+toc checking
+
+#rm -rf $TOP
+

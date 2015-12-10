@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Indexes GCC source code with ctags, respecting the supermacro.
+
+set -e
+
+if [ ! -f gcc/gimple.c ]; then
+	echo 'You must run me from GCC root directory' >&2
+	exit 1
+fi
+
+rm -f cscope.* ctags tags
+
+find gcc libiberty \
+  -path gcc/testsuite -prune -o -path 'lib*' -prune -o -path gcc/testsuite/config -prune \
+  -o \( -name \*.h -o -name \*.c \) -print > cscope.files
+
+BUILD=$HOME/build/$(basename $(pwd))
+if test -f "$BUILD/gcc/options.h"; then
+  find $BUILD/gcc -name \*.h -o -name \*.c -print >> cscope.files
+else
+  echo >&2 "Unable to find build directory at $BUILD, index may be incomplete"
+fi
+
+echo 'Building ctags database...'
+ctags --c++-kinds=+p --fields=+iaS --extra=+q -a -I GTY+,ATTRIBUTE_UNUSED -L cscope.files
+
+cat > deftags <<EOF
+!_TAG_FILE_FORMAT	1	/original ctags format/
+!_TAG_FILE_SORTED	0
+EOF
+for def in \
+    'gcc/tree.def DEFTREECODE' \
+    'gcc/gimple.def DEFGSCODE' \
+    'gcc/rtl.def DEF_RTL_EXPR' \
+    'gcc/internal-fn.def DEF_INTERNAL_FN' \
+    'gcc/params.def DEFPARAM'; do
+  file=${def% *}
+  macro=${def#* }
+  cat $file | sed -ne "s!\($macro *(\([^,]*\)\).*\$!\2	$file	/\1/!p" >> deftags
+done
+
+#echo 'Building cscope database...'
+#cscope -Igcc -Iinclude -q -R -b -i cscope.files
+

@@ -1,0 +1,149 @@
+#!/bin/sh
+
+# Configure and build GCC in current directory.
+
+set -e
+
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
+error() {
+  echo >&2 "$(basename $0): error: $@"
+  exit 1
+}
+
+print_short_help() {
+  cat <<EOF
+Usage: `basename $0` [options] src-dir [configure-options]
+Run \``basename $0` -h' for more details.
+EOF
+}
+
+print_help() {
+  cat <<EOF
+Usage: `basename $0` [options] src-dir [configure-options]
+Configure and build GCC in current directory with typical options.
+By default builds only C and C++ compilers without bootstrap.
+
+Options:
+  -h, --help         Print help and exit.
+  -C dir             Build in dir.
+  -j N               Number of jobs to run (default is 1.5 * number-of-cores).
+  --clean            Force clean of build directory.
+  -i, --install      Install after build (off by default).
+  -g, --debug        Build unoptimized compiler (for debugging).
+  --bootstrap        Configure and build with bootstrap.
+  --bootstrap-asan   Same with ASan bootstrap.
+
+EOF
+}
+
+NCORES=$(grep -c '^processor' /proc/cpuinfo)
+NJOBS=$((3 * $NCORES / 2))
+
+BOOTSTRAP='--disable-bootstrap --enable-languages=c,c++'
+CFGFLAGS=
+
+BUILD_DIR=$(pwd)
+CLEAN=
+INSTALL=
+
+while true; do
+  case "$1" in
+  -C)
+    BUILD_DIR=$2
+    mkdir -p $BUILD_DIR
+    shift 2
+    ;;
+  -g|--debug)
+    CFGFLAGS="$CFGFLAGS CFLAGS='-g -O0' CXXFLAGS='-g -O0'"
+    shift
+    ;;
+  --bootstrap)
+    BOOTSTRAP='--enable-bootstrap'
+    shift
+    ;;
+  --bootstrap-asan)
+    BOOTSTRAP='--enable-bootstrap --with-build-config=bootstrap-asan'
+    export ASAN_OPTIONS=detect_leaks=0
+    NJOBS=4   # Asan-bootstrap is memory-hungry
+    shift
+    ;;
+  --clean)
+    CLEAN=1
+    shift
+    ;;
+  -i|--install)
+    INSTALL=1
+    shift
+    ;;
+  --help|-h)
+    print_help
+    exit 1
+    ;;
+  -j)
+    NJOBS=$2
+    shift 2
+    ;;
+  -j*)
+    NJOBS=$(echo "$1" | sed -e 's/^-j//')
+    shift
+    ;;
+  -*)
+    error "unknown option: $1"
+    ;;
+  *)
+    break
+    ;;
+  esac
+done
+
+if [ $# -lt 1 ]; then
+  print_short_help >&2
+  exit 1
+fi
+
+SRC=$(absolutize $1)
+shift
+
+if [ ! -x $SRC/configure ]; then
+  error "file $SRC/configure is missing or is not executable"
+fi
+
+cd $BUILD_DIR
+
+if [ $(ls | wc -l) -gt 0 ]; then
+  if [ -z "$CLEAN" ]; then
+    error 'Build must be performed in empty directory; do `rm -rf *` or run with --clean'
+  else
+    # Be cautious
+    test -f ./config.log && grep -q GCC_FOR_TARGET ./config.log \
+      || error 'cowardly refusing to clean directory which does not look like a build dir'
+    rm -rf *
+  fi
+fi
+
+HOST=x86_64-unknown-linux-gnu
+TARGET=$HOST
+
+INSTALL_DIR=$HOME/install/$(basename $(pwd))
+
+TIME_START=$(date +%s)
+
+eval $SRC/configure \
+  --enable-multilib --enable-checking \
+  --target=$TARGET --host=$HOST --build=$HOST \
+  --prefix=$INSTALL_DIR \
+  $BOOTSTRAP "$CFGFLAGS" "$@" 2>&1 | tee output.log
+
+nice make -j$NJOBS 2>&1 | tee -a output.log
+
+if test -n "$INSTALL"; then
+  nice make install 2>&1 | tee -a output.log
+fi
+
+DT=$(($(date +%s) - $TIME_START))
+echo "Total time is $(($DT / 60)) minutes (using $NJOBS cores)." > times.log
+

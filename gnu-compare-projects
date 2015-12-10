@@ -1,0 +1,226 @@
+#!/usr/bin/env python
+
+# Compares 2 versions of same OSS project by intelligently
+# comparing ChangeLogs. This is useful because you often
+# don't have VCS at hand (e.g. just two .tar.gz coming from
+# noname vendors).
+
+import sys
+import re
+import os.path
+import os
+import getopt
+
+me = os.path.basename(sys.argv[0])
+
+def error(msg):
+  sys.stderr.write("%s: error: %s\n" % (me, msg))
+  sys.exit(1)
+
+def warn(msg):
+  sys.stderr.write("%s: warning: %s\n" % (me, msg))
+
+def is_tail(s1, s2):
+  i = s2.find(s1)
+  return i != -1 and len(s2) == i + len(s1)
+
+# Get rid of irrelevant whitespace changes in changelogs
+# to avoid spurious differences.
+def canonize_key(k):
+  if not hasattr(canonize_key, 'inner_whites_re'):
+    canonize_key.inner_whites_re = re.compile(r'\s+')
+    canonize_key.remove_backport_msg_re = re.compile(r'^\s*Backport(ed)? from .*$', re.IGNORECASE | re.MULTILINE)
+    canonize_key.author_re = re.compile(r'^\s*[12][0-9]{3}-[01][0-9]-[0123][0-9] .* <.*@.*>$', re.MULTILINE)
+
+#  err_string = '2014-09-02  Cary Coutant  <ccoutant@google.com>'
+#  if k.find(err_string) != -1:
+#    sys.stderr.write('Here: %s' % k)
+
+  # Remove useless parts of CL entry
+  k = canonize_key.remove_backport_msg_re.sub('', k)
+  k = canonize_key.author_re.sub('', k)
+
+  # Remove trailing whites
+  k = k.rstrip()
+
+  # Canonize whites
+  k = canonize_key.inner_whites_re.sub(' ', k)
+
+  # Remove line breaks (this also removes newlines)
+  k = "".join(k.splitlines())
+
+#  if k.find(err_string) != -1:
+#    sys.stderr.write('Result: %s' % k)
+
+  return k
+
+def is_very_old_change(date):
+  return int(date) < 2012
+
+def get_change_date(change_head):
+  return change_head[0:4]
+
+# Parse changelog and extract changes.
+def parse_changelog(cl, changes_re, changes):
+  if not hasattr(parse_changelog, 'change_head_re'):
+    # We allow any number of whites to tolerate against broken ChangeLogs
+    parse_changelog.change_head_re = re.compile(r'^[12][0-9]{3}-[01][0-9]-[0-3][0-9] +[A-Z]')
+    parse_changelog.metainfo_re = re.compile(r'^[^\s]')
+
+  head = None
+  change = ''
+  f = open(cl)
+  lines = f.readlines()
+  f.close()
+
+  lines.append('2001-01-01  Mister X')
+
+  for line in lines:
+    if parse_changelog.change_head_re.match(line):
+      if head is not None:
+        date = get_change_date(head)
+        if not is_very_old_change(date) and (changes_re is None or changes_re.search(change)):
+          changes[canonize_key(change)] = head + change
+      head = line
+      change = ''
+    elif parse_changelog.metainfo_re.match(line):
+      # Skip metainfo (modelines, etc.)
+      pass
+    else:
+      # FIXME: concat is inefficient
+      change += line
+
+# Debug helper.
+def dump_changes(changes, lim = 10):
+  n = 0
+  for k, v in changes.iteritems():
+    print "Next: %s" % v
+    n += 1
+    if n > lim:
+      break
+
+# Read all changelogs in directory
+# (i.e. both upstream and vendor changelogs).
+def collect_changes(cls, changes_re):
+  changes = {}
+  for cl in cls:
+    parse_changelog(cl, changes_re, changes)
+
+  return changes
+
+# Compare changelog contents and report missing changes.
+def compare_changes(dir1, dir2, relroot, changes1, changes2):
+  # TODO: usually only heads of changelogs will be different;
+  # stripping the longest common suffix to improve speed.
+
+  hdr = "=== %s/ChangeLog ===" % relroot
+
+  has_left_only = False
+  for k, v in changes1.iteritems():
+    if k not in changes2:
+      if not has_left_only:
+        has_left_only = True
+        print hdr
+        print "ONLY IN %s:" % dir1
+      print v
+
+  has_right_only = False
+  for k, v in changes2.iteritems():
+    if k not in changes1:
+      if not has_right_only:
+        has_right_only = True
+        # See if we already printed header
+        if not has_left_only:
+          print hdr
+        print "ONLY IN %s:" % dir2
+      print v
+
+def is_interesting_cl(f):
+  if not hasattr(is_interesting_cl, 'date_re'):
+    is_interesting_cl.date_re = re.compile(r'\b[0-9]{4}\b')
+
+  if f.find('ChangeLog') != 0:
+    return False
+
+  dates = is_interesting_cl.date_re.findall(f)
+  if len(dates) == 1 and is_very_old_change(dates[0]):
+    return False
+
+  return True
+
+def print_help_and_exit():
+    sys.stderr.write("""\
+Usage: %s [-m match-expr] [-p prune-dir] dir1 dir2
+Recursively compare corresponding changelogs in directories.
+
+Example:
+  # Compare FSF Binutils 2.24 against trunk
+  $ %s src/binutils-gdb-2.24 src/binutils-gdb
+
+  # Only consider Aarch64 changes ('eabi' not included because it clashes with other targets)
+  $ %s -m 'aarch|\\barm\\b|cortex|\\ba5[37]' -p gdb src/binutils-gdb-2.24 src/binutils-gdb
+""" % (me, me, me))
+    sys.exit(1)
+
+def main():
+  match = None
+  prunes = ['testsuite', 'libiberty', '.git', '.svn', 'CVS']
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], "hm:p:", ["help", "match=", "prune="])
+  except getopt.GetoptError as err:
+    error(str(err))
+  output = None
+  verbose = False
+  changes_re = None
+  for o, a in opts:
+    if o in ("-h", "--help"):
+      print_help_and_exit()
+    elif o in ("-p", "--prune"):
+      prunes.append(a)
+    elif o in ("-m", "--match"):
+      changes_re = re.compile(a, re.IGNORECASE)
+    else:
+      assert False, "unhandled option"
+
+  if len(args) != 2:
+    error('invalid arguments; for more details run with -h')
+
+  dir1 = args[0]
+  if not os.path.exists(dir1):
+    error("directory %s does not exist" % dir1)
+
+  dir2 = args[1]
+  if not os.path.exists(dir2):
+    error("directory %s does not exist" % dir2)
+
+  for root, dirs, files in os.walk(dir1):
+    # Skip useless changelogs
+    if os.path.basename(root) in prunes:
+      del dirs[:]
+      continue
+
+    cls1 = map(lambda f: os.path.join(root, f), filter(is_interesting_cl, files))
+    changes1 = collect_changes(cls1, changes_re)
+
+    # Strip dir1
+    if not root.startswith(dir1):
+      error("internal error in os.walk")
+    relroot = root[len(dir1):]
+    if relroot:
+      prefix = '.' if relroot[0] == '/' else './'
+      relroot = prefix + relroot
+
+    root2 = os.path.join(dir2, relroot)
+    if not os.path.isdir(root2):
+      warn("directory %s does not exist in %s" % (relroot, dir2))
+      continue
+
+    cls2 = map(lambda f: os.path.join(root2, f), filter(is_interesting_cl, os.listdir(root2)))
+    changes2 = collect_changes(cls2, changes_re)
+
+    compare_changes(dir1, dir2, relroot, changes1, changes2)
+
+if __name__ == "__main__":
+    main()
+
+

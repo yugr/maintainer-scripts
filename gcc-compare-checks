@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Compares results of 2 GCC regression tests.
+
+if [ $# != 2 ]; then
+	echo "Syntax: `basename $0` REF-DIR NEW-DIR" >&2
+	exit 1
+fi
+
+REF=$(cd $1; pwd)
+NEW=$(cd $2; pwd)
+
+SRC=$(dirname $(grep '^ \+\$.*configure' config.log | head -1 | awk '{print $2}'))
+
+for sum in $(cd $REF; find -name \*.sum); do
+	echo "========== Comparing $sum"
+	$SRC/contrib/dg-cmp-results.sh -v -v unix $REF/$sum $NEW/$sum
+done
+

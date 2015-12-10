@@ -1,0 +1,142 @@
+#!/bin/sh
+
+# A simple script to automate deploy of typical OSS projects.
+
+set -e
+
+# TODO:
+# * .tar.gz inputs
+
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
+error() {
+  echo >&2 "$(basename $0): error: $@"
+  exit 1
+}
+
+warn() {
+  echo >&2 "$(basename $0): warning: $@"
+}
+
+isemptydir() {
+  test -d "$1" && test $(find "$1" -maxdepth 0 -empty)
+}
+
+BUILD_ROOT=$HOME/build
+INSTALL_ROOT=$HOME/install
+
+build_project() {
+  SOURCE=$(absolutize $1)
+  shift
+
+  PRJ=$(basename $SOURCE)
+  test -n "$PRJ" || error "failed to extract project name"
+
+  BUILD=$BUILD_ROOT/$PRJ
+  INSTALL=$INSTALL_ROOT/$PRJ
+
+  mkdir -p $BUILD
+  if ! isemptydir $BUILD; then
+    if test -f $BUILD/config.log || test "$CLEAN"; then
+      rm -rf $BUILD/*
+    else
+      error "cowardly refusing to remove contents of $BUILD"
+    fi
+  fi
+
+  if test "$INPLACE"; then
+    cp -r $SOURCE/* $BUILD
+    SOURCE=$BUILD
+  fi
+
+  if test -f $SOURCE/configure; then
+    (cd $BUILD && $SOURCE/configure --prefix=$INSTALL "$@")
+  elif test -f $SOURCE/CMakeLists.txt; then
+    (cd $BUILD && cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=$INSTALL $SOURCE)
+  else
+    error "not an Autoconf or CMake project: $SOURCE"
+  fi
+
+  nice make -C $BUILD -j$NJOBS
+
+  # Parallel makeinstalls tend to fail...
+  make -C $BUILD -j$NJOBS install || make -C $BUILD install
+}
+
+print_help_and_exit() {
+  cat <<EOF
+Syntax: $(basename $0) [PRJ1-OPT]... PRJ1 [PRJ2-OPT]... PRJ2...
+Configure and build Autoconf projects in directories PRJi.
+
+Supported flags:
+  -h, --help     Print this message.
+  --clean        Force clean of PRJi build directory contents.
+  --inplace      Copy sources to build directory
+                 (for projects that don't support separate builddir).
+  -j N           Number of jobs to run
+                 (global flag, default is 1.5 * number-of-cores).
+  CFLAGS=...     
+  CXXFLAGS=...   
+  LDFLAGS=...    Forward to make.
+
+Examples:
+  $ $(basename $0) CFLAGS='-g -O0' --inplace ~/src/ltrace
+EOF
+  exit 1
+}
+
+reset_opts() {
+  # Only global flags are reset
+  CLEAN=
+  INPLACE=
+  unset CFLAGS CXXFLAGS LDFLAGS
+}
+
+if test $# = 0; then
+  set -- $PWD
+fi
+
+NJOBS=$(grep -c '^processor' /proc/cpuinfo)
+NJOBS=$(($NJOBS * 3 / 2))
+
+reset_opts
+
+while test "$1"; do
+  case "$1" in
+    -h|--help)
+      print_help_and_exit
+      ;;
+    --clean)
+      CLEAN=1
+      shift
+      ;;
+    --inplace)
+      INPLACE=1
+      shift
+      ;;
+    -j)
+      NJOBS=$2
+      shift 2
+      ;;
+    -j*)
+      NJOBS=$(echo $1 | sed -e 's/^-j//')
+      shift
+      ;;
+    *FLAGS=*)
+      export "$1"
+      shift
+      ;;
+    -*)
+      error "unknown option: $1"
+      ;;
+    *)
+      build_project "$1"
+      reset_opts
+      shift
+      ;;
+  esac
+done
+

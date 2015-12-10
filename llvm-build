@@ -1,0 +1,150 @@
+#!/bin/sh
+
+# Configure and build LLVM in current directory.
+
+set -e
+
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
+error() {
+  echo >&2 "$(basename $0): error: $@"
+  exit 1
+}
+
+print_short_help() {
+  cat <<EOF
+Usage: `basename $0` [options] src-dir [cmake-options]
+Run \``basename $0` -h' for more details.
+EOF
+}
+
+print_help() {
+  cat <<EOF
+Usage: `basename $0` [options] src-dir [cmake-options]
+Configure and build LLVM in current directory with typical options.
+
+Options:
+  -h, --help         Print help and exit.
+  -C dir             Build in dir.
+  -j N               Number of jobs to run (default is 1.5 * number-of-cores).
+  --clean            Force clean of build directory.
+  --install          Install after build (off by default).
+  -g, --debug        Build unoptimized compiler (for debugging).
+  --external-rt      Build external compiler-rt.
+  --test             Run check-all after successful build.
+
+EOF
+}
+
+NCORES=$(grep -c '^processor' /proc/cpuinfo)
+NJOBS=$((3 * $NCORES / 2))
+
+INSTALL_DIR=$HOME/install/$(basename $(pwd))
+CMAKE_FLAGS="-DLLVM_ENABLE_ASSERTIONS=ON -DBUILD_SHARED_LIBS=ON -DLLVM_TARGETS_TO_BUILD=X86 -DCOMPILER_RT_BUILD_SHARED_ASAN=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DCMAKE_BUILD_TYPE=RelWithDebInfo"
+
+BUILD_DIR=$(pwd)
+CLEAN=
+INSTALL=
+TEST=
+
+while true; do
+  case "$1" in
+  -C)
+    BUILD_DIR=$2
+    mkdir -p $BUILD_DIR
+    shift 2
+    ;;
+  -g|--debug)
+    CMAKE_FLAGS="$CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Debug -DCOMPILER_RT_DEBUG=ON"
+    shift
+    ;;
+  --clean)
+    CLEAN=1
+    shift
+    ;;
+  --install)
+    INSTALL=1
+    shift
+    ;;
+  --test)
+    TEST=1
+    shift
+    ;;
+  --external-rt)
+    CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON"
+    shift
+    ;;
+  --help|-h)
+    print_help
+    exit 1
+    ;;
+  -j)
+    NJOBS=$2
+    shift 2
+    ;;
+  -j*)
+    NJOBS=$(echo "$1" | sed -e 's/^-j//')
+    shift
+    ;;
+  -*)
+    error "unknown option: $1"
+    ;;
+  *)
+    break
+    ;;
+  esac
+done
+
+if [ $# -lt 1 ]; then
+  print_short_help >&2
+  exit 1
+fi
+
+SRC=$(absolutize $1)
+shift
+
+if [ ! -f $SRC/CMakeLists.txt ]; then
+  error "file $SRC/CMakeLists.txt is missing"
+fi
+
+cd $BUILD_DIR
+
+if [ $(ls | wc -l) -gt 0 ]; then
+  if [ -z "$CLEAN" ]; then
+    error 'Build must be performed in empty directory; do `rm -rf *` or run with --clean'
+  else
+    # Be cautious
+    test -f ./LLVMBuild.cmake \
+      || error 'cowardly refusing to clean directory which does not look like a build dir'
+    rm -rf *
+  fi
+fi
+
+HOST=x86_64-unknown-linux-gnu
+TARGET=$HOST
+
+TIME_START=$(date +%s)
+
+#module load gcc/pc/483   # LLVM wants GCC 4.8+
+
+LOG=$(basename $0).log
+
+eval cmake $CMAKE_FLAGS \
+    "$@" $SRC | tee $LOG
+
+nice make VERBOSE=1 -j$NJOBS 2>&1 | tee -a $LOG
+
+if test -n "$INSTALL"; then
+  nice make VERBOSE=1 install 2>&1 | tee -a $LOG
+fi
+
+if test -n "$TEST"; then
+  nice make VERBOSE=1 check-all 2>&1 | tee -a $LOG
+fi
+
+DT=$(($(date +%s) - $TIME_START))
+echo "Total time is $(($DT / 60)) minutes (using $NJOBS cores)." > times.log
+

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# Runs GCC under debugger(automates extraction of cc1 runline,
+# loads hooks and sets some useful flags).
+
+set -e
+
+GDBFLAGS=
+#GDBFLAGS='-tui'
+GCC=
+GCCFLAGS=
+
+NFLAGS=0
+for arg in "$@"; do
+	if test -z "$GCC" && test -x "$arg"; then
+		shift $NFLAGS
+		break
+	fi
+	GDBFLAGS="$GDBFLAGS '$arg'"
+	NFLAGS=$(($NFLAGS + 1))
+done
+
+if [ $# -eq 0 ]; then
+	echo >&2 "Syntax: $(basename $0) [gdb-args] path/to/gcc [gcc-args]"
+	exit 1
+fi
+
+GCC="$1"
+shift
+
+CMD=$($GCC -### "$@" 2>&1 | fgrep cc1 | tail -1 | sed -e 's/\"//g')
+CC=$(echo "$CMD" | awk '{print $1}')
+if ! test -x "$CC"; then
+	echo >&2 "Failed to find compiler proper"
+	exit 1
+fi
+
+SRC=$($GCC -v 2>&1 | sed -ne '/^Configured with:/{s/Configured with: \([^ ]\+\)*\/configure .*/\1/; p}')
+GDBHOOKS=$SRC/gcc/gdbhooks.py
+if ! test -f "$GDBHOOKS"; then
+	echo >&2 "Failed to find GDB hooks"
+	exit 1
+fi
+
+# Need eval because of escapes in GDBFLAGS
+eval gdb -x $GDBHOOKS \
+	-ex "'b internal_error'" \
+	-ex "'set pagination off'" \
+	-ex "'set print pretty on'" \
+	-ex "'set print array on'" \
+	$GDBFLAGS \
+	-ex run \
+	--args $CMD
+
