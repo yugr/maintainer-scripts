@@ -36,6 +36,7 @@ Options:
   -g, --debug        Build unoptimized compiler (for debugging).
   --bootstrap        Configure and build with bootstrap.
   --bootstrap-asan   Same with ASan bootstrap.
+  --bootstrap-ubsan  Ditto for UBSan.
 
 EOF
 }
@@ -69,6 +70,10 @@ while true; do
     BOOTSTRAP='--enable-bootstrap --with-build-config=bootstrap-asan'
     export ASAN_OPTIONS=detect_leaks=0
     NJOBS=4   # Asan-bootstrap is memory-hungry
+    shift
+    ;;
+  --bootstrap-ubsan)
+    BOOTSTRAP='--enable-bootstrap --with-build-config=bootstrap-ubsan'
     shift
     ;;
   --clean)
