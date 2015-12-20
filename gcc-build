@@ -37,6 +37,7 @@ Options:
   --bootstrap        Configure and build with bootstrap.
   --bootstrap-asan   Same with ASan bootstrap.
   --bootstrap-ubsan  Ditto for UBSan.
+  --multilib         Enable multilibs (they are disabled by default).
 
 EOF
 }
@@ -96,6 +97,10 @@ while true; do
     NJOBS=$(echo "$1" | sed -e 's/^-j//')
     shift
     ;;
+  --multilib)
+    CFGFLAGS="$CFGFLAGS --enable-multilib"
+    shift
+    ;;
   -*)
     error "unknown option: $1"
     ;;
@@ -138,7 +143,7 @@ INSTALL_DIR=$HOME/install/$(basename $(pwd))
 TIME_START=$(date +%s)
 
 eval $SRC/configure \
-  --enable-multilib --enable-checking \
+  --disable-multilib --enable-checking \
   --target=$TARGET --host=$HOST --build=$HOST \
   --prefix=$INSTALL_DIR \
   $BOOTSTRAP "$CFGFLAGS" "$@" 2>&1 | tee output.log
