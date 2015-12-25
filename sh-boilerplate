@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -e
+
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
+error() {
+  echo >&2 "$(basename $0): error: $@"
+  exit 1
+}
+
+warn() {
+  echo >&2 "$(basename $0): warning: $@"
+}
+
+mkcleandir() {
+  mkdir -p "$1"
+  rm -rf "$1"/*
+}
+
+isemptydir() {
+  #test $(ls -A "$1" | wc -l) = 0
+  test -d "$1" && test $(find "$1" -maxdepth 0 -empty)
+}
+
+strip_ext() {
+#  echo "$1" | sed -e 's!\.[^.]*$!!'
+  echo "${1%.*}"
+}
+
+print_help_and_exit() {
+  cat <<EOF
+Syntax: $(basename $0) ...
+EOF
+  exit 1
+}
+
+me=$(basename $0)
+
+TEMP=$(getopt -o 'o:h' --long 'output:help' -n $(basename $0) -- "$@")
+eval set -- "$TEMP"
+
+while true; do
+  case "$1" in
+    -o | --output)
+      OUTPUT="$2"
+      shift 2
+      ;;
+    -h | --help)
+      print_help_and_exit
+      ;;
+    -*)
+      error "unknown option: $1"
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      error 'internal error'
+      ;;
+  esac
+done
+
+if [ $# -eq 0 ]; then
+  print_help_and_exit
+fi
+
