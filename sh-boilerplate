@@ -40,7 +40,7 @@ EOF
 
 me=$(basename $0)
 
-TEMP=$(getopt -o 'o:h' --long 'output:help' -n $(basename $0) -- "$@")
+TEMP=$(getopt -o 'o:h' --long 'output:,help' -n $(basename $0) -- "$@")
 eval set -- "$TEMP"
 
 while true; do
