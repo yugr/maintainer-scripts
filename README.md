@@ -7,3 +7,5 @@ for typical toolchain maintenance tasks:
 * configure, build and install a typical Autoconf project (configure-build-install)
 * set up ctags for gcc source dir (gcc-index)
 * run compiler proper under debugger (gcc-debug)
+
+All the code is MIT-licensed.
