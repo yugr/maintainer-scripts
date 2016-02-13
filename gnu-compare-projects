@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# Copyright 2015-2016 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
 # Compares 2 versions of same OSS project by intelligently
 # comparing ChangeLogs. This is useful because you often
 # don't have VCS at hand (e.g. just two .tar.gz coming from

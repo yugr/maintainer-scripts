@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Copyright 2015-2016 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
 # Runs GCC under debugger(automates extraction of cc1 runline,
 # loads hooks and sets some useful flags).
 
