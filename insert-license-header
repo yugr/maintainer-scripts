@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# Copyright 2015-2016 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+set -e
+
+ME=$(basename $0)
+TMP=/tmp/$ME.$$
+
+trap "rm -f $TMP*" EXIT
+
+usage() {
+  echo <<EOF
+Syntax: $ME LICENSE.TXT DIR
+Insert license from LICENSE.TXT to all source/script files in DIR.
+EOF
+  exit 1
+}
+
+is_source() {
+  echo $1 | grep -q '\.\(h\|hpp\|inc\|c\|cpp\|cc\|C\|cxx\)$' \
+    || file $1 | grep -q source
+}
+
+is_script() {
+  echo $1 | grep -q '\.\(sh\|bash\|ksh\|zsh\|pl\|py\)$' \
+    || file $1 | grep -q script
+}
+
+if test $# -ne 2; then
+  usage
+fi
+
+LICENSE=$1
+DIR=$2
+
+if ! test -f "$LICENSE"; then
+  echo >&2 "$ME: can't open $LICENSE"
+  exit 1
+fi
+
+if ! test -d "$DIR"; then
+  echo >&2 "$ME: $DIR is not a directory"
+  exit 1
+fi
+
+cd "$DIR"
+
+EULA_C=$TMP.eula.c
+( echo '/*'; sed 's/^/ * /' $LICENSE; echo ' */' ) > $EULA_C
+
+EULA_SH=$TMP.shell.c
+sed 's/^/# /' $LICENSE > $EULA_SH
+
+for f in $(find -iname '.[a-z0-9]*' -prune -o -type f -a -print); do
+  if head -1 $f | grep -q '^ *#!'; then
+    echo "Patching shebang script $f"
+    head -n 1 $f > $TMP.shebang
+    tail -n +2 $f > $TMP.body
+    ( cat $TMP.shebang; echo; cat $EULA_SH; cat $TMP.body ) > $f
+  elif is_source $f; then
+    echo "Patching source file $f"
+    cp $f $TMP
+    ( cat $EULA_C; echo; cat $TMP ) > $f
+  elif is_script $f; then
+    echo "Patching script $f"
+    cp $f $TMP
+    ( cat $EULA_SH; echo; cat $TMP ) > $f
+  else
+    echo "Ignoring $f"
+  fi
+done
+
