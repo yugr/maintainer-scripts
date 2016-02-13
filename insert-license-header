@@ -20,14 +20,24 @@ EOF
   exit 1
 }
 
+has_shebang() {
+  head -1 $1 | grep -q '^ *#!'
+}
+
 is_source() {
   echo $1 | grep -q '\.\(h\|hpp\|inc\|c\|cpp\|cc\|C\|cxx\)$' \
     || file $1 | grep -q source
 }
 
 is_script() {
-  echo $1 | grep -q '\.\(sh\|bash\|ksh\|zsh\|pl\|py\)$' \
+  has_shebang $1 \
+    || echo $1 | grep -q '\.\(sh\|bash\|ksh\|zsh\|pl\|py\|hs\)$' \
     || file $1 | grep -q script
+}
+
+is_haskell_script() {
+  head -1 $1 | grep -q '^ *#![^ ]*ghci\>' \
+    || echo $1 | grep -q '\.hs$'
 }
 
 if test $# -ne 2; then
@@ -52,23 +62,32 @@ cd "$DIR"
 EULA_C=$TMP.eula.c
 ( echo '/*'; sed 's/^/ * /' $LICENSE; echo ' */' ) > $EULA_C
 
-EULA_SH=$TMP.shell.c
+EULA_SH=$TMP.shell
 sed 's/^/# /' $LICENSE > $EULA_SH
 
+EULA_HS=$TMP.haskell
+sed 's/^/-- /' $LICENSE > $EULA_HS
+
 for f in $(find -iname '.[a-z0-9]*' -prune -o -type f -a -print); do
-  if head -1 $f | grep -q '^ *#!'; then
-    echo "Patching shebang script $f"
-    head -n 1 $f > $TMP.shebang
-    tail -n +2 $f > $TMP.body
-    ( cat $TMP.shebang; echo; cat $EULA_SH; cat $TMP.body ) > $f
+  if is_script $f; then
+    echo "Patching script $f"
+    if is_haskell_script $f; then
+      EULA=$EULA_HS
+    else
+      EULA=$EULA_SH
+    fi
+    if has_shebang $f; then
+      head -n 1 $f > $TMP.shebang
+      tail -n +2 $f > $TMP.body
+      ( cat $TMP.shebang; echo; cat $EULA; cat $TMP.body ) > $f
+    else
+      cp $f $TMP
+      ( cat $EULA; echo; cat $TMP ) > $f
+    fi
   elif is_source $f; then
     echo "Patching source file $f"
     cp $f $TMP
     ( cat $EULA_C; echo; cat $TMP ) > $f
-  elif is_script $f; then
-    echo "Patching script $f"
-    cp $f $TMP
-    ( cat $EULA_SH; echo; cat $TMP ) > $f
   else
     echo "Ignoring $f"
   fi
