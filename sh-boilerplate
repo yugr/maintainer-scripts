@@ -57,12 +57,12 @@ while true; do
     -h | --help)
       print_help_and_exit
       ;;
-    -*)
-      error "unknown option: $1"
-      ;;
     --)
       shift
       break
+      ;;
+    -*)
+      error "unknown option: $1"
       ;;
     *)
       error 'internal error'
