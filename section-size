@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+if test -z "$1" || test -z "$2"; then
+  cat <<EOF
+Usage: $(basename $0) section-pattern exe-or-lib-name
+Print size of section in ELF file (sum of sizes if several sections match).
+
+Example:
+ # .* because modern GCC has .text.unlikely
+ $ $(basename $0) .text.* /lib/x86_64-linux-gnu/libc-2.19.so
+EOF
+  exit 1
+fi
+
+SEC="$1"
+OBJ="$2"
+
+readelf -SW "$OBJ" \
+  | grep -v NOBITS \
+  | sed -e 's!^ *\[[0-9 ]*\] *!!' \
+  | grep '^ *'$SEC'[ 	]\+' \
+  | awk '{sz = strtonum("0x" $5); s += sz; } END{print s}'
