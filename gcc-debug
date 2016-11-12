@@ -17,7 +17,7 @@ GCCFLAGS=
 
 NFLAGS=0
 for arg in "$@"; do
-	if test -z "$GCC" && test -x "$arg"; then
+	if test -z "$GCC" && which "$arg" > /dev/null 2>&1; then
 		shift $NFLAGS
 		break
 	fi
