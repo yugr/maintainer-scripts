@@ -1,21 +1,26 @@
-#!/bin/sh
+#!/bin/sh -eu
 
-# Copyright 2015-2016 Yury Gribov
+# Copyright 2015-2017 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
 # Compares results of 2 GCC regression tests.
 
-if [ $# != 2 ]; then
-	echo "Syntax: `basename $0` REF-DIR NEW-DIR" >&2
+if [ $# != 1 -a $# != 2 ]; then
+	echo "Syntax: `basename $0` REF-DIR [NEW-DIR]" >&2
 	exit 1
 fi
 
-REF=$(cd $1; pwd)
-NEW=$(cd $2; pwd)
+REF=$(cd $1; echo $PWD)
 
-SRC=$(dirname $(grep '^ \+\$.*configure' config.log | head -1 | awk '{print $2}'))
+if [ $# = 1 ]; then
+	NEW=$PWD
+else
+	NEW=$(cd $2; echo $PWD)
+fi
+
+SRC=$(dirname $(grep '^ \+\$.*configure' $1/config.log | head -1 | awk '{print $2}'))
 
 for sum in $(cd $REF; find -name \*.sum); do
 	echo "========== Comparing $sum"
