@@ -30,20 +30,6 @@ isemptydir() {
   test -d "$1" && test $(find "$1" -maxdepth 0 -empty)
 }
 
-curtime() {
-  date '+%s'
-}
-
-pretty_time() {
-  stime=$1
-  etime=$(curtime)
-  dt=$(($etime - $stime))
-  s=$(($dt % 60))
-  m=$((($dt / 60) % 60))
-  h=$(($dt / 60 / 60))
-  printf '%d:%02d:%02d' $h $m $s
-}
-
 P=x86_64-unknown-linux-gnu
 
 gcc_configure() {
@@ -90,14 +76,16 @@ is_gcc_dir() {
 }
 
 tic() {
-  TIME_START=$(date)
-  echo "Started $1: $TIME_START" >> $TOP/times.log
+  TIME_START=$(date +%s)
+  # Would be nice to re-use TIME_START/END but `date -d' fails
+  # with "date: invalid date ‘Sun 22 Jan 12:00 GMT 2017’" on some machines
+  echo "Started $1: $(date)" >> $TOP/times.log
 }
 
 toc() {
-  TIME_END=$(date)
-  echo "Finished $1: $TIME_END" >> $TOP/times.log
-  DT=$(($(date +%s -d "$TIME_END") - $(date +%s -d "$TIME_START")))
+  TIME_END=$(date +%s)
+  echo "Finished $1: $(date)" >> $TOP/times.log
+  DT=$((TIME_END - TIME_START))
   echo "Total time is $(($DT / 60)) minutes." >> $TOP/times.log
 }
 
