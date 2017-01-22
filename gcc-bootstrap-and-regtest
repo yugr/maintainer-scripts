@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/sh -eu
 
-# Copyright 2015-2016 Yury Gribov
+# Copyright 2015-2017 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -136,11 +136,13 @@ if ! is_gcc_dir .; then
   error 'curdir is not GCC dir'
 fi
 
-if [ master != $(git rev-parse --abbrev-ref HEAD) ]; then
-  echo >&2 'Current branch is not master!'
+if [ -d .git ]; then
+  if [ master != $(git rev-parse --abbrev-ref HEAD) ]; then
+    echo >&2 'Current branch is not master!'
+  fi
 fi
 
-if test -z "$TOP"; then
+if test -z "${TOP:-}"; then
   TOP=/tmp/$me-$USER-$$
 fi
 mkcleandir $TOP
@@ -155,6 +157,9 @@ mkcleandir $BUILD_P
 
 NJOBS=$(( $(grep -c '^processor' /proc/cpuinfo) * 3 / 2 ))
 NJOBS=$(( $NJOBS / 2 ))
+if [ $NJOBS = 0 ]; then
+  NJOBS=1
+fi
 
 #if [ ! -d $SRC/mpfr -o ! -d $SRC/gmp -o ! -d $SRC/mpc -o ! -d $SRC/isl -o ! -d $SRC/cloog ]; then
 #  echo 'Downloading libs...'
