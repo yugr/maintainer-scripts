@@ -120,6 +120,10 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
+if [ ! -d $1 ]; then
+  error "directory $1 does not exist"
+fi
+
 SRC=$(absolutize $1)
 shift
 
