@@ -92,7 +92,7 @@ toc() {
 me=$(basename $0)
 
 if [ $# -eq 0 ]; then
-  echo "Syntax: $me [config-flags] patch-or-dir"
+  echo "Syntax: $me [config-flags] [PATH | DIR | BRANCH]"
   echo "To override default tmp dir use TOP environment variable."
   exit 1
 fi
