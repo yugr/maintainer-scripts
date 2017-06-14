@@ -40,6 +40,7 @@ Options:
   -i, --install      Install after build (off by default).
   -g, --debug        Build unoptimized compiler (for debugging).
   --bootstrap        Configure and build with bootstrap.
+  --bootstrap-O3     Configure and build with bootstrap-O3.
   --bootstrap-asan   Same with ASan bootstrap.
   --bootstrap-ubsan  Ditto for UBSan.
   --multilib         Enable multilibs (they are disabled by default).
@@ -80,6 +81,10 @@ while true; do
     ;;
   --bootstrap-ubsan)
     BOOTSTRAP='--enable-bootstrap --with-build-config=bootstrap-ubsan'
+    shift
+    ;;
+  --bootstrap-O3)
+    BOOTSTRAP='--enable-bootstrap --with-build-config=bootstrap-O3'
     shift
     ;;
   --clean)
