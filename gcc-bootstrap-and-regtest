@@ -8,8 +8,6 @@
 # This script bootstraps normal and patched versions of GCC,
 # runs regression tests and compares results.
 
-set -e
-
 absolutize() {
   test -e "$1"
   (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
@@ -44,7 +42,7 @@ gcc_configure() {
   fi
 
   # TODO: --enable-checking=all ?
-  $SRC/configure --enable-checking --enable-bootstrap \
+  nice $SRC/configure --enable-checking --enable-bootstrap \
     --target=$P --host=$P --build=$P \
     $CFGFLAGS
 }
@@ -79,75 +77,131 @@ tic() {
   TIME_START=$(date +%s)
   # Would be nice to re-use TIME_START/END but `date -d' fails
   # with "date: invalid date ‘Sun 22 Jan 12:00 GMT 2017’" on some machines
-  echo "Started $1: $(date)" >> $TOP/times.log
+  echo "Started $1: $(date)" >> $OUT/times.log
 }
 
 toc() {
   TIME_END=$(date +%s)
-  echo "Finished $1: $(date)" >> $TOP/times.log
+  echo "Finished $1: $(date)" >> $OUT/times.log
   DT=$((TIME_END - TIME_START))
-  echo "Total time is $(($DT / 60)) minutes." >> $TOP/times.log
+  echo "Total time is $(($DT / 60)) minutes." >> $OUT/times.log
 }
 
 me=$(basename $0)
 
+help() {
+  cat <<EOF
+Usage: $me [OPTIONS] [SRC_REF] [ SRC_PATCHED | PATCH | BRANCH ]
+Verifies GCC patch against reference codebase.
+
+If SRC_REF is not specified, current directory is taken
+as reference.
+
+Patch can be either separate directory, .patch or branch
+in SRC_REF (SRC_REF must be Git repo in this case).
+
+Options are
+  -h, --help      Print this message and exit.
+  -o DIR
+  --output DIR    Put temporary files to DIR, instead of TMP.
+  -j N            Use N jobs (default is 1.5*numcores).
+  --cfg-flags F   Append F to GCC configure flags.
+EOF
+}
+
 if [ $# -eq 0 ]; then
   echo "Syntax: $me [config-flags] [PATH | DIR | BRANCH]"
-  echo "To override default tmp dir use TOP environment variable."
+  echo "To override default tmp dir use OUT environment variable."
   exit 1
 fi
 
-SRC=$(pwd)
+TEMP=$(getopt -o 'o:j:h' --long 'cfg-flags:,output:,help' -n $(basename $0) -- "$@")
+eval set -- "$TEMP"
 
 CFGFLAGS=
-PATCH=
-for opt in $@; do
-  if test -f "$opt" && file "$opt" | grep -q 'diff output'; then
-    # That's a patch
-    PATCH=$(absolutize "$opt")
-  elif is_gcc_dir "$opt"; then
-    # That's a directory with sources
-    PATCH=$(absolutize "$opt")
-  elif git rev-parse -q --verify $opt > /dev/null; then
-    # That's head name
-    PATCH="$opt"
-  else
-    CFGFLAGS="$CFGFLAGS $opt"
-  fi
-done
-
-if [ -z "$PATCH" ]; then
-  error 'no patch specified'
-fi
-
-if ! is_gcc_dir .; then
-  error 'curdir is not GCC dir'
-fi
-
-if [ -d .git ]; then
-  if [ master != $(git rev-parse --abbrev-ref HEAD) ]; then
-    echo >&2 'Current branch is not master!'
-  fi
-fi
-
-if test -z "${TOP:-}"; then
-  TOP=/tmp/$me-$USER-$$
-fi
-mkcleandir $TOP
-
-echo "Temporary files will be stored in $TOP"
-
-BUILD=$TOP/build-orig
-mkcleandir $BUILD
-
-BUILD_P=$TOP/build-patched
-mkcleandir $BUILD_P
+OUT=/tmp/$me-$USER-$$
 
 NJOBS=$(( $(grep -c '^processor' /proc/cpuinfo) * 3 / 2 ))
 NJOBS=$(( $NJOBS / 2 ))
 if [ $NJOBS = 0 ]; then
   NJOBS=1
 fi
+
+while true; do
+  case "$1" in
+    -j)
+      NJOBS="$2"
+      shift 2
+      ;;
+    --cfg-flags)
+      CFGFLAGS="$CFGFLAGS $2"
+      shift 2
+      ;;
+    -o | --output)
+      OUT=$(absolutize "$2")
+      shift 2
+      ;;
+    -h | --help)
+      help
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      error "unknown option: $1"
+      ;;
+    *)
+      error 'internal error'
+      ;;
+  esac
+done
+
+if test $# = 2; then
+  SRC="$1"
+  PATCH="$2"
+  if ! test -d "$SRC"; then
+    error "reference directory $SRC does not exist"
+  fi
+elif test $# = 1; then
+  SRC=$PWD
+  PATCH="$1"
+else
+  error "too many positional arguments"
+fi
+
+if test -f "$PATCH" && file "$PATCH" | grep -q 'diff output'; then
+  # That's a plain patch
+  PATCH=$(absolutize "$PATCH")
+elif is_gcc_dir "$PATCH"; then
+  # That's a directory with sources
+  PATCH=$(absolutize "$PATCH")
+elif git rev-parse -q --verify $opt > /dev/null; then
+  # That's branch name
+  :
+else
+  error "I can't make sense of $PATCH"
+fi
+
+if ! is_gcc_dir $SRC; then
+  error "reference directory $SRC is not a GCC dir"
+fi
+
+if [ -d $SRC/.git ]; then
+  if [ master != $(git rev-parse --abbrev-ref HEAD) ]; then
+    echo >&2 "Current branch in reference directory $SRC is not master!"
+  fi
+fi
+
+mkcleandir $OUT
+echo "Temporary files will be stored in $OUT"
+
+BUILD=$OUT/build-orig
+mkdir $BUILD
+
+BUILD_P=$OUT/build-patched
+mkdir $BUILD_P
 
 #if [ ! -d $SRC/mpfr -o ! -d $SRC/gmp -o ! -d $SRC/mpc -o ! -d $SRC/isl -o ! -d $SRC/cloog ]; then
 #  echo 'Downloading libs...'
@@ -157,7 +211,7 @@ fi
 if [ -d $PATCH ]; then
   SRC_P=$PATCH
 else
-  SRC_P=$TOP/src-patched
+  SRC_P=$OUT/src-patched
   echo 'Copying...'
   mkcleandir $SRC_P
   if [ -f $PATCH ]; then
@@ -165,38 +219,35 @@ else
     patch -d $SRC_P -p1 < $PATCH
   else
     # Git head
-    git archive $PATCH | tar -x -C $SRC_P
+    git --git-dir=$SRC archive $PATCH | tar -x -C $SRC_P
   fi
 fi
 
 echo 'Configuring...'
-gcc_configure $SRC $BUILD > $TOP/configure-orig.log 2>&1 &
-gcc_configure $SRC_P $BUILD_P > $TOP/configure-patched.log 2>&1 &
+gcc_configure $SRC $BUILD > $OUT/configure-orig.log 2>&1 &
+gcc_configure $SRC_P $BUILD_P > $OUT/configure-patched.log 2>&1 &
 wait %1 %2   # Errors are not detected without '%1 %2'
 
 echo 'Building...'
 tic build
-gcc_build $BUILD $NJOBS > $TOP/build-orig.log 2>&1 &
-gcc_build $BUILD_P $NJOBS > $TOP/build-patched.log 2>&1 &
+gcc_build $BUILD $NJOBS > $OUT/build-orig.log 2>&1 &
+gcc_build $BUILD_P $NJOBS > $OUT/build-patched.log 2>&1 &
 wait %1 %2
 toc build
 
 # GCC people ask us to test i386 as well...
 echo 'Checking (32-bit)...'
 tic 'checking (32-bit)'
-RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD $NJOBS > $TOP/check-orig-32.log 2>&1 &
-RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD_P $NJOBS > $TOP/check-patched-32.log 2>&1 &
+RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD $NJOBS > $OUT/check-orig-32.log 2>&1 &
+RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD_P $NJOBS > $OUT/check-patched-32.log 2>&1 &
 wait %1 %2
-gcc_compare $SRC $BUILD $BUILD_P | tee $TOP/compare-32.log
+gcc_compare $SRC $BUILD $BUILD_P | tee $OUT/compare-32.log
 toc 'checking (32-bit)'
 
 echo 'Checking...'
 tic checking
-gcc_check $BUILD $NJOBS > $TOP/check-orig.log 2>&1 &
-gcc_check $BUILD_P $NJOBS > $TOP/check-patched.log 2>&1 &
+gcc_check $BUILD $NJOBS > $OUT/check-orig.log 2>&1 &
+gcc_check $BUILD_P $NJOBS > $OUT/check-patched.log 2>&1 &
 wait %1 %2
-gcc_compare $SRC $BUILD $BUILD_P | tee $TOP/compare.log
+gcc_compare $SRC $BUILD $BUILD_P | tee $OUT/compare.log
 toc checking
-
-#rm -rf $TOP
-
