@@ -203,7 +203,7 @@ if test -f "$PATCH" && file "$PATCH" | grep -q 'diff output'; then
 elif is_gcc_dir "$PATCH"; then
   # That's a directory with sources
   PATCH=$(absolutize "$PATCH")
-elif git rev-parse -q --verify $opt > /dev/null; then
+elif git rev-parse -q --verify $PATCH > /dev/null; then
   # That's branch name
   :
 else
