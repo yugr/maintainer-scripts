@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/bin/sh
 
 # Copyright 2015-2017 Yury Gribov
 # 
@@ -7,6 +7,8 @@
 
 # This script bootstraps normal and patched versions of GCC,
 # runs regression tests and compares results.
+
+set -eu
 
 absolutize() {
   test -e "$1"

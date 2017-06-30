@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/bin/sh
 
 # Copyright 2015-2017 Yury Gribov
 # 
@@ -6,6 +6,8 @@
 # found in the LICENSE.txt file.
 
 # Compares results of 2 GCC regression tests.
+
+set -eu
 
 if [ $# != 1 -a $# != 2 ]; then
 	echo "Syntax: `basename $0` REF-DIR [NEW-DIR]" >&2
