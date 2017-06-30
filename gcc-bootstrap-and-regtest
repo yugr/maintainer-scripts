@@ -89,6 +89,30 @@ toc() {
   echo "Total time is $(($DT / 60)) minutes." >> $OUT/times.log
 }
 
+function killtree() {
+  local status
+
+  status=0
+
+  # Stop parent so that it does not respawn children
+  kill -SIGSTOP $1 || status=1
+
+  for kid in $(ps -o pid --no-headers --ppid $1); do
+    killtree $kid $2 || status=1
+  done
+
+  # Need to continue stopped process so that system can kill it
+  kill -$2 $1 && kill -SIGCONT $1 || status=1
+
+  return $status
+}
+
+function killkids() {
+  for kid in $(ps -o pid --no-headers --ppid $$); do
+    killtree $kid TERM
+  done
+}
+
 me=$(basename $0)
 
 help() {
@@ -161,7 +185,7 @@ while true; do
 done
 
 if test $# = 2; then
-  SRC="$1"
+  SRC=$(absolutize "$1")
   PATCH="$2"
   if ! test -d "$SRC"; then
     error "reference directory $SRC does not exist"
@@ -225,16 +249,20 @@ else
   fi
 fi
 
+trap "echo 'Encountered error, killing children...'; killkids" EXIT
+
 echo 'Configuring...'
 gcc_configure $SRC $BUILD > $OUT/configure-orig.log 2>&1 &
 gcc_configure $SRC_P $BUILD_P > $OUT/configure-patched.log 2>&1 &
-wait %1 %2   # Errors are not detected without '%1 %2'
+wait %2
+wait %1
 
 echo 'Building...'
 tic build
 gcc_build $BUILD $NJOBS > $OUT/build-orig.log 2>&1 &
 gcc_build $BUILD_P $NJOBS > $OUT/build-patched.log 2>&1 &
-wait %1 %2
+wait %2
+wait %1
 toc build
 
 # GCC people ask us to test i386 as well...
@@ -242,7 +270,8 @@ echo 'Checking (32-bit)...'
 tic 'checking (32-bit)'
 RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD $NJOBS > $OUT/check-orig-32.log 2>&1 &
 RUNTESTFLAGS='--target_board="unix/-m32"' gcc_check $BUILD_P $NJOBS > $OUT/check-patched-32.log 2>&1 &
-wait %1 %2
+wait %2
+wait %1
 gcc_compare $SRC $BUILD $BUILD_P | tee $OUT/compare-32.log
 toc 'checking (32-bit)'
 
@@ -250,6 +279,7 @@ echo 'Checking...'
 tic checking
 gcc_check $BUILD $NJOBS > $OUT/check-orig.log 2>&1 &
 gcc_check $BUILD_P $NJOBS > $OUT/check-patched.log 2>&1 &
-wait %1 %2
+wait %2
+wait %1
 gcc_compare $SRC $BUILD $BUILD_P | tee $OUT/compare.log
 toc checking
