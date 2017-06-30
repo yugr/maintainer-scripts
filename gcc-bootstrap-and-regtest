@@ -189,7 +189,7 @@ if ! is_gcc_dir $SRC; then
 fi
 
 if [ -d $SRC/.git ]; then
-  if [ master != $(git rev-parse --abbrev-ref HEAD) ]; then
+  if [ master != $(git --git-dir=$SRC/.git rev-parse --abbrev-ref HEAD) ]; then
     echo >&2 "Current branch in reference directory $SRC is not master!"
   fi
 fi
@@ -219,7 +219,7 @@ else
     patch -d $SRC_P -p1 < $PATCH
   else
     # Git head
-    git --git-dir=$SRC archive $PATCH | tar -x -C $SRC_P
+    git --git-dir=$SRC/.git archive $PATCH | tar -x -C $SRC_P
   fi
 fi
 
