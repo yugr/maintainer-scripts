@@ -283,3 +283,5 @@ wait %2
 wait %1
 gcc_compare $SRC $BUILD $BUILD_P | tee $OUT/compare.log
 toc checking
+
+trap '' EXIT
