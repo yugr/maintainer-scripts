@@ -149,8 +149,9 @@ if [ $(ls | wc -l) -gt 0 ]; then
   fi
 fi
 
-HOST=x86_64-unknown-linux-gnu
-TARGET=$HOST
+# Support only native build for now
+TARGET=$(gcc -v 2>&1 | grep Target | awk '{print $2}')
+HOST=$TARGET
 
 INSTALL_DIR=$HOME/install/$(basename $(pwd))
 
