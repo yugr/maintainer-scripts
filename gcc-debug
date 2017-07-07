@@ -7,6 +7,9 @@
 
 # Runs GCC under debugger(automates extraction of cc1 runline,
 # loads hooks and sets some useful flags).
+#
+# An example of typical usage:
+# $ gcc-debug -ex 'b generic-match.c:2564' xgcc -Bgcc repro.c
 
 set -e
 
