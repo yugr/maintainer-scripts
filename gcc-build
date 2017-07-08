@@ -44,6 +44,7 @@ Options:
   --bootstrap-asan   Same with ASan bootstrap.
   --bootstrap-ubsan  Ditto for UBSan.
   --multilib         Enable multilibs (they are disabled by default).
+  --no-libs          Do not build target libs.
 
 EOF
 }
@@ -57,6 +58,7 @@ CFGFLAGS=
 BUILD_DIR=$(pwd)
 CLEAN=
 INSTALL=
+GOAL=
 
 while true; do
   case "$1" in
@@ -111,6 +113,10 @@ while true; do
     CFGFLAGS="$CFGFLAGS --enable-multilib"
     shift
     ;;
+  --no-libs)
+    GOAL=all-gcc
+    shift
+    ;;
   -*)
     error "unknown option: $1"
     ;;
@@ -163,7 +169,7 @@ eval $SRC/configure \
   --prefix=$INSTALL_DIR \
   $BOOTSTRAP "$CFGFLAGS" "$@" 2>&1 | tee output.log
 
-nice make -j$NJOBS 2>&1 | tee -a output.log
+nice make -j$NJOBS $GOAL 2>&1 | tee -a output.log
 
 if test -n "$INSTALL"; then
   nice make install 2>&1 | tee -a output.log
