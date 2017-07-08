@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# Helper script for locating GCC regressions (or progressions).
+# It automates building of GCC and then calls user-provided
+# secondary script to do actual test.
+#
+# User's script is run in the folder where it's located.
+# It should take a single parameter - path to GCC builddir.
+# 
+# For regressions, call as
+# $ git bisect start <NEW> <OLD> gcc
+# $ git bisect run gcc-bisect exit_1_if_bad.sh
+# 
+# To locate progression (i.e. new optimizations or bugfixes),
+# calls as
+# $ git bisect start <NEW> <OLD> gcc
+# $ git bisect run gcc-bisect exit_1_if_good.sh
+#
+# TODO:
+# - test
+# - parametrize
+
+set -eux
+
+me=$(basename $0)
+
+if test $# != 1; then
+  echo >&2 "Usage: $me myscript.sh"
+  exit 1
+fi
+
+SRCDIR=$PWD
+BUILDDIR=$(mktemp -d)
+TESTDIR=$(cd $(dirname $1); pwd)
+
+if ! test -d .git -a -f gcc/gcc.c; then
+  echo >&2 "$me: must be run from GCC git repo"
+  exit 1
+fi
+
+if ! test -d $SRCDIR/gmp; then
+  contrib/download_prerequisites
+fi
+
+trap "rm -rf $BUILDDIR" EXIT
+mkdir -p $BUILDDIR
+rm -rf $BUILDDIR/*
+gcc-build -C $BUILDDIR --no-libs $SRCDIR --enable-languages=c CFLAGS=-O0 CXXFLAGS=-O0 || exit 125
+
+cd $TESTDIR
+"$1" $BUILDDIR
