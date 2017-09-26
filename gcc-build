@@ -149,9 +149,11 @@ fi
 
 cd $BUILD_DIR
 
-if [ $(ls | wc -l) -gt 0 ]; then
+if test -f configure; then
+  error 'can not build GCC in source dir'
+elif [ $(ls | wc -l) -gt 0 ]; then
   if [ -z "$CLEAN" ]; then
-    error 'Build must be performed in empty directory; do `rm -rf *` or run with --clean'
+    error "build must be performed in empty directory; do \`rm -rf $BUILD_DIR/*\` or run with --clean"
   else
     # Be cautious
     test -f ./config.log && grep -q GCC_FOR_TARGET ./config.log \
