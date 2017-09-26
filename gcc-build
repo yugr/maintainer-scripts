@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2016 Yury Gribov
+# Copyright 2015-2017 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -46,6 +46,9 @@ Options:
   --multilib         Enable multilibs (they are disabled by default).
   --no-libs          Do not build target libs.
 
+Environment variable CFGFLAGS may be used to pass additional
+configuration flags.
+
 EOF
 }
 
@@ -53,7 +56,9 @@ NCORES=$(grep -c '^processor' /proc/cpuinfo)
 NJOBS=$((3 * $NCORES / 2))
 
 BOOTSTRAP='--disable-bootstrap --enable-languages=c,c++'
-CFGFLAGS=
+if test -z "${CFGFLAGS:-}"; then
+  CFGFLAGS=
+fi
 
 BUILD_DIR=$(pwd)
 CLEAN=
@@ -67,7 +72,7 @@ while true; do
     mkdir -p $BUILD_DIR
     shift 2
     ;;
-  -g|--debug)
+  -g | --debug)
     CFGFLAGS="$CFGFLAGS CFLAGS='-g -O0' CXXFLAGS='-g -O0'"
     shift
     ;;
@@ -93,11 +98,11 @@ while true; do
     CLEAN=1
     shift
     ;;
-  -i|--install)
+  -i | --install)
     INSTALL=1
     shift
     ;;
-  --help|-h)
+  --help | -h)
     print_help
     exit 1
     ;;
@@ -177,4 +182,3 @@ fi
 
 DT=$(($(date +%s) - $TIME_START))
 echo "Total time is $(($DT / 60)) minutes (using $NJOBS cores)." > times.log
-
