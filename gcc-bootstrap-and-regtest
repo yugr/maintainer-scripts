@@ -7,6 +7,8 @@
 
 # This script bootstraps normal and patched versions of GCC,
 # runs regression tests and compares results.
+# 
+# TODO: rewrite to use Makefiles
 
 set -eu
 
