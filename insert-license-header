@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2016 Yury Gribov
+# Copyright 2015-2017 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -13,7 +13,7 @@ TMP=/tmp/$ME.$$
 trap "rm -f $TMP*" EXIT
 
 usage() {
-  echo <<EOF
+  cat <<EOF
 Syntax: $ME LICENSE.TXT DIR
 Insert license from LICENSE.TXT to all source/script files in DIR.
 EOF
