@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+
+# Copyright 2017 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+import sys
+import os
+import os.path
+import re
+import subprocess
+import argparse
+
+me = os.path.basename(__file__)
+
+def warn(msg):
+  sys.stderr.write('%s: warning: %s\n' % (me, msg))
+
+def error(msg):
+  sys.stderr.write('%s: error: %s\n' % (me, msg))
+  sys.exit(1)
+
+def main():
+  parser = argparse.ArgumentParser(description="Generate wrappers for shared library functions.")
+  parser.add_argument('library', metavar='LIB', help="Library to be wrapped.")
+  parser.add_argument('--verbose', '-v', action='count', help="Print diagnostic info.", default=0)
+  parser.add_argument('--dlopen-callback', help="Call user-provided custom callback to dlopen library.")
+  parser.add_argument('--no-dlopen', help="Do not emit dlopen call (user must load library himself).", action='store_true')
+  parser.add_argument('--library-load-name', help="Use custom name for dlopened library (default is LIB).")
+
+  args = parser.parse_args()
+
+if __name__ == '__main__':
+  main()
