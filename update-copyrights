@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# Copyright 2017 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+set -eu
+
+ME=$(basename $0)
+
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
+usage() {
+  cat <<EOF
+Syntax: $ME [OPT]... DIR
+Update license comments in all source/script files in DIR.
+
+Options:
+  --license L, -l L  Path to main license file.
+  -h, --help         Print this help and exit.
+EOF
+  exit 1
+}
+
+TEMP=$(getopt -o 'hl:' --long 'license:,help' -n $ME -- "$@")
+eval set -- "$TEMP"
+
+SHORT=
+LICENSE=
+
+while true; do
+  case "$1" in
+    -h | --help)
+      usage
+      ;;
+    -l | --license)
+      LICENSE=$2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      error "unknown option: $1"
+      ;;
+    *)
+      error 'internal error'
+      ;;
+  esac
+done
+
+if test $# -eq 1; then
+  DIR=$1
+elif test $# -eq 0; then
+  DIR=.
+else
+  echo >&2 "Usage: $ME [OPT]... DIR"
+  exit 1
+fi
+
+if ! test -d "$DIR"; then
+  echo >&2 "$ME: $DIR is not a directory"
+  exit 1
+fi
+
+if ! test -d "$DIR"/.git; then
+  echo >&2 "$ME: $DIR is not a git repo"
+  exit 1
+fi
+
+if test -z "$LICENSE"; then
+  LICENSE=$DIR/LICENSE.txt
+fi
+
+if ! test -f "$LICENSE"; then
+  echo >&2 "$ME: can't open $LICENSE"
+  exit 1
+fi
+
+update() {
+  sed -i -e '/^\s*\(#\|\/\/\|\/\*\|--\)\s*Copyright\s/ { s/ \([0-9]\+-\)[0-9]\+ / \1'$2' /g; s/ [0-9]\+ / '$2' /; }' $1
+}
+
+Y=0
+for f in $(find $DIR -iname '.[a-z0-9]*' -prune -o -type f -a -print); do
+  d=$(git log -n1 --format=%ai $f)
+  y=$(date --date="$d" +%Y)
+  if test -z "$Y" -o "$Y" -lt "$y"; then
+    Y=$y
+  fi
+  update $f $y
+done
+
+if test "$Y" = 0; then
+  echo >&2 "$ME: failed to extract last modification date for $LICENSE"
+  exit 1
+fi
+
+update $LICENSE $Y
