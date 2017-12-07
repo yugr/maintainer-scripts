@@ -5,17 +5,27 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-set -e
+set -eu
 
 ME=$(basename $0)
 TMP=/tmp/$ME.$$
 
 trap "rm -f $TMP*" EXIT
 
+absolutize() {
+  test -e "$1"
+  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+}
+
 usage() {
   cat <<EOF
-Syntax: $ME LICENSE.TXT DIR
-Insert license from LICENSE.TXT to all source/script files in DIR.
+Syntax: $ME [OPT]... [DIR]
+Insert license to all source/script files in directory.
+
+Options:
+  --short            Do not insert full license, just refer to file.
+  --license L, -l L  Path to license file.
+  -h, --help         Print this help and exit.
 EOF
   exit 1
 }
@@ -40,33 +50,91 @@ is_haskell_script() {
     || echo $1 | grep -q '\.hs$'
 }
 
-if test $# -ne 2; then
-  usage
-fi
+TEMP=$(getopt -o 'hl:' --long 'short,license:,help' -n $ME -- "$@")
+eval set -- "$TEMP"
 
-LICENSE=$1
-DIR=$2
+SHORT=
+LICENSE=
 
-if ! test -f "$LICENSE"; then
-  echo >&2 "$ME: can't open $LICENSE"
+while true; do
+  case "$1" in
+    --short)
+      SHORT=1
+      shift
+      ;;
+    -h | --help)
+      usage
+      ;;
+    -l | --license)
+      LICENSE=$2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      error "unknown option: $1"
+      ;;
+    *)
+      error 'internal error'
+      ;;
+  esac
+done
+
+if test $# -eq 1; then
+  DIR=$1
+elif test $# -eq 0; then
+  DIR=.
+else
+  echo >&2 "Usage: $ME [OPT]... DIR"
   exit 1
 fi
+
+DIR=$1
 
 if ! test -d "$DIR"; then
   echo >&2 "$ME: $DIR is not a directory"
   exit 1
 fi
 
+if test -z "$LICENSE"; then
+  LICENSE=$DIR/LICENSE.txt
+fi
+
+if ! test -f "$LICENSE"; then
+  echo >&2 "$ME: can't open $LICENSE"
+  exit 1
+fi
+
+LICENSE=$(absolutize $LICENSE)
+
 cd "$DIR"
 
+if test -z "$SHORT"; then
+  cp $LICENSE $TMP.lic
+else
+  LIC_NAME=$(grep -m1 -i license $LICENSE)
+  if test -z "$LIC_NAME"; then
+    echo >&2 "Failed to extract license name from $LICENSE"
+    exit 1
+  fi
+
+  sed '/Copyright (c)/q' $LICENSE > $TMP.lic
+  cat >> $TMP.lic <<EOF
+
+Use of this source code is governed by $LIC_NAME
+that can be found in the $(basename $LICENSE) file.
+EOF
+fi
+
 EULA_C=$TMP.eula.c
-( echo '/*'; sed 's/^/ * /' $LICENSE; echo ' */' ) > $EULA_C
+( echo '/*'; sed 's/^/ * /' $TMP.lic; echo ' */' ) > $EULA_C
 
 EULA_SH=$TMP.shell
-sed 's/^/# /' $LICENSE > $EULA_SH
+sed 's/^/# /' $TMP.lic > $EULA_SH
 
 EULA_HS=$TMP.haskell
-sed 's/^/-- /' $LICENSE > $EULA_HS
+sed 's/^/-- /' $TMP.lic > $EULA_HS
 
 for f in $(find -iname '.[a-z0-9]*' -prune -o -type f -a -print); do
   if is_script $f; then
