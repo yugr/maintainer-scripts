@@ -74,6 +74,9 @@ fi
 
 if test -z "$LICENSE"; then
   LICENSE=$DIR/LICENSE.txt
+  if ! test -f $LICENSE; then
+    LICENSE=$DIR/LICENSE
+  fi
 fi
 
 if ! test -f "$LICENSE"; then
