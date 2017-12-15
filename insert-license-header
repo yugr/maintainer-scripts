@@ -90,8 +90,6 @@ else
   exit 1
 fi
 
-DIR=$1
-
 if ! test -d "$DIR"; then
   echo >&2 "$ME: $DIR is not a directory"
   exit 1
