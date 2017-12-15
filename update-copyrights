@@ -94,13 +94,13 @@ update() {
 Y1=0
 Y2=0
 for f in $(find $DIR -iname '.[a-z0-9]*' -prune -o -type f -a -print); do
-  d1=$(git log --format=%ai $f | tail -n1)
+  d1=$(git log --follow --find-copies-harder --format=%ai $f | tail -n1)
   y1=$(date --date="$d1" +%Y)
   if test $Y1 = 0 -o $Y1 -gt $y1; then
     Y1=$y1
   fi
 
-  d2=$(git log -n1 --format=%ai $f | head -n1)
+  d2=$(git log --follow --find-copies-harder --format=%ai $f | head -n1)
   y2=$(date --date="$d2" +%Y)
   if test $Y2 = 0 -o $Y2 -lt $y2; then
     Y2=$y2
