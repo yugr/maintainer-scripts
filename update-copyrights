@@ -85,22 +85,45 @@ if ! test -f "$LICENSE"; then
 fi
 
 update() {
-  sed -i -e '/^\s*\(#\|\/\/\|\/\*\|--\)\s*Copyright\s/ { s/ \([0-9]\+-\)[0-9]\+ / \1'$2' /g; s/ [0-9]\+ / '$2' /; }' $1
+  sed -i -e '
+/Copyright\s/ {
+  s/ \([0-9]\+-\)\?[0-9]\+[, ]/ '$2' /g;
+}' $1
 }
 
-Y=0
+Y1=0
+Y2=0
 for f in $(find $DIR -iname '.[a-z0-9]*' -prune -o -type f -a -print); do
-  d=$(git log -n1 --format=%ai $f)
-  y=$(date --date="$d" +%Y)
-  if test -z "$Y" -o "$Y" -lt "$y"; then
-    Y=$y
+  d1=$(git log --format=%ai $f | tail -n1)
+  y1=$(date --date="$d1" +%Y)
+  if test $Y1 = 0 -o $Y1 -gt $y1; then
+    Y1=$y1
   fi
-  update $f $y
+
+  d2=$(git log -n1 --format=%ai $f | head -n1)
+  y2=$(date --date="$d2" +%Y)
+  if test $Y2 = 0 -o $Y2 -lt $y2; then
+    Y2=$y2
+  fi
+
+  if test $y1 = $y2; then
+    yy=$y1
+  else
+    yy="$y1-$y2"
+  fi
+
+  update $f "$yy"
 done
 
-if test "$Y" = 0; then
+if test $Y1 = 0 -o $Y2 = 0; then
   echo >&2 "$ME: failed to extract last modification date for $LICENSE"
   exit 1
 fi
 
-update $LICENSE $Y
+if test $Y1 = $Y2; then
+  YY=$Y1
+else
+  YY="$Y1-$Y2"
+fi
+
+update $LICENSE "$YY"
