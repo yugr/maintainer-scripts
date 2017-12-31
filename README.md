@@ -10,5 +10,6 @@ for typical toolchain maintenance tasks:
 * run compiler proper under debugger (gcc-debug)
 * insert license header into all files in a folder (insert-license-header)
 * update copyright comments in all files in a folder (update-copyrights)
+* generate tags for C++ repo (cpptags)
 
 All the code is MIT-licensed.
