@@ -40,6 +40,7 @@ fi
 
 if ! test -d $SRCDIR/gmp; then
   contrib/download_prerequisites
+  find -L gmp mpc mpfr isl | xargs touch -r .
 fi
 
 trap "rm -rf $BUILDDIR" EXIT
