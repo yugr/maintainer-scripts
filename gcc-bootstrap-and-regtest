@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2017 Yury Gribov
+# Copyright 2015-2018 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -147,7 +147,7 @@ TEMP=$(getopt -o 'o:j:h' --long 'cfg-flags:,output:,help' -n $(basename $0) -- "
 eval set -- "$TEMP"
 
 CFGFLAGS=
-OUT=/tmp/$me-$USER-$$
+OUT=${TMPDIR:-/tmp}/$me-$USER-$$
 
 NJOBS=$(( $(grep -c '^processor' /proc/cpuinfo) * 3 / 2 ))
 NJOBS=$(( $NJOBS / 2 ))
