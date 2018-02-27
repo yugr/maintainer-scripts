@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2018 Yury Gribov
+# Copyright 2015-2017 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -205,7 +205,7 @@ if test -f "$PATCH" && file "$PATCH" | grep -q 'diff output'; then
 elif is_gcc_dir "$PATCH"; then
   # That's a directory with sources
   PATCH=$(absolutize "$PATCH")
-elif git rev-parse -q --verify $PATCH > /dev/null; then
+elif git --git-dir=$SRC/.git rev-parse -q --verify $PATCH > /dev/null; then
   # That's branch name
   :
 else
@@ -246,8 +246,8 @@ else
     cp -r $SRC/* $SRC_P
     patch -d $SRC_P -p1 < $PATCH
   else
-    # Git head
     git --git-dir=$SRC/.git archive $PATCH | tar -x -C $SRC_P
+    find $SRC_P | xargs touch -r $SRC_P
   fi
 fi
 
