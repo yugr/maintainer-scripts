@@ -26,8 +26,8 @@ EOF
   exit 1
 }
 
-TEMP=$(getopt -o 'hl:' --long 'license:,help' -n $ME -- "$@")
-eval set -- "$TEMP"
+ARGS=$(getopt -o 'hl:' --long 'license:,help' -n $ME -- "$@")
+eval set -- "$ARGS"
 
 SHORT=
 LICENSE=

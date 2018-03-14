@@ -45,8 +45,8 @@ EOF
 
 me=$(basename $0)
 
-TEMP=$(getopt -o 'o:h' --long 'output:,help' -n $(basename $0) -- "$@")
-eval set -- "$TEMP"
+ARGS=$(getopt -o 'o:h' --long 'output:,help' -n $(basename $0) -- "$@")
+eval set -- "$ARGS"
 
 while true; do
   case "$1" in

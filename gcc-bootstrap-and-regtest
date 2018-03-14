@@ -143,8 +143,8 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-TEMP=$(getopt -o 'o:j:h' --long 'cfg-flags:,output:,help' -n $(basename $0) -- "$@")
-eval set -- "$TEMP"
+ARGS=$(getopt -o 'o:j:h' --long 'cfg-flags:,output:,help' -n $(basename $0) -- "$@")
+eval set -- "$ARGS"
 
 CFGFLAGS=
 OUT=${TMPDIR:-/tmp}/$me-$USER-$$
