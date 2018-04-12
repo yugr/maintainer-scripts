@@ -16,7 +16,7 @@ fi
 
 rm -f cscope.* ctags tags
 
-find gcc libiberty \
+find gcc libiberty libcpp \
   -path gcc/testsuite -prune -o -path 'lib*' -prune -o -path gcc/testsuite/config -prune \
   -o \( -name \*.h -o -name \*.c \) -print > cscope.files
 
