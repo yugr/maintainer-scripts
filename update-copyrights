@@ -39,6 +39,7 @@ while true; do
       ;;
     -l | --license)
       LICENSE=$2
+      shift 2
       ;;
     --)
       shift
