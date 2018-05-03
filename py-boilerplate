@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2017 Yury Gribov
+# Copyright 2017-2018 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -20,6 +20,35 @@ def warn(msg):
 def error(msg):
   sys.stderr.write('%s: error: %s\n' % (me, msg))
   sys.exit(1)
+
+# "Regex cacher" which allows doing things like
+#   if Re.match(...):
+#     x = Re.group(1)
+class Re:
+  last_match = None
+
+  @classmethod
+  def match(self, *args, **kwargs):
+    self.last_match = re.match(*args, **kwargs)
+    return self.last_match
+
+  @classmethod
+  def search(self, *args, **kwargs):
+    self.last_match = re.search(*args, **kwargs)
+    return self.last_match
+
+  @classmethod
+  def fullmatch(self, *args, **kwargs):
+    self.last_match = re.fullmatch(*args, **kwargs)
+    return self.last_match
+
+  @classmethod
+  def group(self, *args, **kwargs):
+    return self.last_match.group(*args, *kwargs)
+
+  @classmethod
+  def groups(self, *args, **kwargs):
+    return self.last_match.groups(*args, **kwargs)
 
 def main():
   parser = argparse.ArgumentParser(description="Generate wrappers for shared library functions.")
