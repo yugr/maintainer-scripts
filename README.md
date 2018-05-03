@@ -12,5 +12,6 @@ for typical toolchain maintenance tasks:
 * update copyright comments in all files in a folder (update-copyrights)
 * generate tags for C++ (cpptags) and Python (pytags) repos
 * boilerplate code for shell (sh-boilerplate) and Python (py-boilerplate) scripts
+* print predefined GCC macro (gcc-predefs)
 
 All the code is MIT-licensed.

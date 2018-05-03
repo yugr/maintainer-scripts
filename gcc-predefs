@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Copyright 2018 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# Prints predefined GCC macro
+
+set -eu
+
+CC=gcc
+if test $# -gt 0; then
+  if which "$1" >/dev/null 2>&1; then
+    CC="$1"
+    shift
+  fi
+fi
+
+TMP=$(mktemp --suffix=.h)
+trap "rm -f $TMP" EXIT
+
+$CC "$@" -E -dM $TMP
