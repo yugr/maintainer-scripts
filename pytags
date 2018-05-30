@@ -5,4 +5,11 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-ctags --python-kinds=-i "$@"
+if ctags --version 2>&1 | grep -q Emacs; then
+  FLAGS='-l python'
+else
+  # Exuberant Ctags
+  FLAGS=--python-kinds=-i
+fi
+
+ctags $FLAGS "$@"
