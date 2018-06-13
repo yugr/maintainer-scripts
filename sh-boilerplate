@@ -38,14 +38,20 @@ strip_ext() {
 
 print_help_and_exit() {
   cat <<EOF
-Syntax: $(basename $0) ...
+Usage: $(basename $0) [OPT]... ...
+<Tool description goes here>
+
+Options:
+  -h, --help    Print help and exit.
+  -x            Enable shell tracing.
+  <Other options go here>
 EOF
   exit 1
 }
 
 me=$(basename $0)
 
-ARGS=$(getopt -o 'o:h' --long 'output:,help' -n $(basename $0) -- "$@")
+ARGS=$(getopt -o 'o:hx' --long 'output:,help' -n $(basename $0) -- "$@")
 eval set -- "$ARGS"
 
 while true; do
@@ -56,6 +62,9 @@ while true; do
       ;;
     -h | --help)
       print_help_and_exit
+      ;;
+    -x)
+      set -x
       ;;
     --)
       shift
@@ -73,4 +82,3 @@ done
 if [ $# -eq 0 ]; then
   print_help_and_exit
 fi
-
