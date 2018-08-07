@@ -1,0 +1,75 @@
+#!/bin/sh
+
+set -eu
+
+print_help_and_exit() {
+  cat <<EOF
+Usage: $(basename $0) [OPT]... CMD ...
+Apply Git command to all repositories in current directory.
+
+Options:
+  -h, --help    Print help and exit.
+  -x            Enable shell tracing.
+  -r, --recursive
+                Search for Git repos recursively
+                (rather than just in current directory).
+
+Examples:
+  $ $(basename $0) status
+EOF
+  exit 1
+}
+
+me=$(basename $0)
+
+ARGS=$(getopt -o 'rhx' --long 'recursive,help' -n $(basename $0) -- "$@")
+eval set -- "$ARGS"
+
+R=
+while true; do
+  case "$1" in
+    -r | --recursive)
+      R=1
+      shift
+      ;;
+    -h | --help)
+      print_help_and_exit
+      ;;
+    -x)
+      set -x
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      error "unknown option: $1"
+      ;;
+    *)
+      error 'internal error'
+      ;;
+  esac
+done
+
+if [ $# -eq 0 ]; then
+  print_help_and_exit
+fi
+
+if test -z "$R"; then
+  REPOS=$(ls -1d */.git)
+else
+  REPOS=$(find -name .git -a -type d)
+fi
+
+BAD_REPOS=
+for d in $REPOS; do
+  echo "=== $me: running in $d..."
+  if ! (cd $d/.. && git "$@"); then
+    BAD_REPOS="${BAD_REPOS}$d"
+  fi
+done
+
+if test -n "$BAD_REPOS"; then
+  echo >&2 "=== $me: failed in following repositories: $BAD_REPOS"
+  exit 1
+fi
