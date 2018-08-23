@@ -13,6 +13,7 @@ Options:
   -r, --recursive
                 Search for Git repos recursively
                 (rather than just in current directory).
+  -k, --keep    Keep temp files.
 
 Examples:
   $ $(basename $0) status
@@ -22,10 +23,8 @@ EOF
 
 me=$(basename $0)
 
-ARGS=$(getopt -o 'rhx' --long 'recursive,help' -n $(basename $0) -- "$@")
-eval set -- "$ARGS"
-
 R=
+KEEP=
 while true; do
   case "$1" in
     -r | --recursive)
@@ -37,6 +36,11 @@ while true; do
       ;;
     -x)
       set -x
+      shift
+      ;;
+    -k | --keep)
+      KEEP=1
+      shift
       ;;
     --)
       shift
@@ -46,7 +50,7 @@ while true; do
       error "unknown option: $1"
       ;;
     *)
-      error 'internal error'
+      break
       ;;
   esac
 done
@@ -61,12 +65,30 @@ else
   REPOS=$(find -name .git -a -type d)
 fi
 
-BAD_REPOS=
+TMP=$(mktemp -d --suffix=git-all.$$)
+if test -z "$KEEP"; then
+  trap "rm -rf $TMP" EXIT
+else
+  echo "Temp files will be stored in $TMP"
+fi
+
+JOBS=
 for d in $REPOS; do
+  d=$(readlink -f $d/..)
+  (cd $d && git "$@" > $TMP/$(basename $d).log 2>&1) &
+  JOBS="$JOBS $d,$!"
+  sleep 0.1
+done
+
+BAD_REPOS=
+for d_pid in $JOBS; do
+  d=${d_pid%,*}
+  pid=${d_pid#*,}
   echo "=== $me: running in $d..."
-  if ! (cd $d/.. && git "$@"); then
+  if ! wait $pid; then
     BAD_REPOS="${BAD_REPOS}$d"
   fi
+  cat $TMP/$(basename $d).log
 done
 
 if test -n "$BAD_REPOS"; then
