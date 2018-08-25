@@ -13,5 +13,6 @@ This repo contains a bunch of scripts which can be useful for typical toolchain/
 * `cpptags`, `pytags`: wrappers for `ctags` to generate tags for different languages
 * `sh-boilerplate`, `py-boilerplate`: boilerplate code for different languages
 * `git-all`: run Git command in all repos in current folder
+* `py-linter`: Pylint wrapper
 
 All the code is MIT-licensed.
