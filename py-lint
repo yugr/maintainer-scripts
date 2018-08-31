@@ -44,6 +44,6 @@ PYTHONPATH=$name${PYTHONPATH:+:$PYTHONPATH} pylint \
   -d missing-docstring \
   -d misplaced-comparison-constant \
   "$@" \
-  $name | tee -a $log
+  $name | tee -a $name/$log
 
 echo "Copy of output was saved to $log"
