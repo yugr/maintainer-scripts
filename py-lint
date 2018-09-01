@@ -32,7 +32,6 @@ PYTHONPATH=$name${PYTHONPATH:+:$PYTHONPATH} pylint \
   -d bad-continuation \
   -d line-too-long \
   -d bad-indentation \
-  -d bad-whitespace \
   -d invalid-name \
   -d too-many-locals \
   -d too-many-branches \
