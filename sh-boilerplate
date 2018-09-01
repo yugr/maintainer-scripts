@@ -5,7 +5,7 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-set -e
+set -eu
 
 absolutize() {
   test -e "$1"
@@ -36,7 +36,7 @@ strip_ext() {
   echo "${1%.*}"
 }
 
-print_help_and_exit() {
+usage() {
   cat <<EOF
 Usage: $(basename $0) [OPT]... ...
 <Tool description goes here>
@@ -54,6 +54,8 @@ me=$(basename $0)
 ARGS=$(getopt -o 'o:hx' --long 'output:,help' -n $(basename $0) -- "$@")
 eval set -- "$ARGS"
 
+OUTPUT=
+
 while true; do
   case "$1" in
     -o | --output)
@@ -61,7 +63,7 @@ while true; do
       shift 2
       ;;
     -h | --help)
-      print_help_and_exit
+      usage
       ;;
     -x)
       set -x
@@ -80,5 +82,5 @@ while true; do
 done
 
 if [ $# -eq 0 ]; then
-  print_help_and_exit
+  usage
 fi
