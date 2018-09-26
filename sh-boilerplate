@@ -67,6 +67,7 @@ while true; do
       ;;
     -x)
       set -x
+      shift
       ;;
     --)
       shift
