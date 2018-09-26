@@ -7,18 +7,27 @@
 
 set -eu
 
+# Based on https://misc.flogisoft.com/bash/tip_colors_and_formatting
+END_COLOR='\033[0m'
+BLACK='\033[30m'
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+BLUE='\033[34m'
+WHITE='\033[97m'
+
 absolutize() {
   test -e "$1"
   (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
 }
 
 error() {
-  echo >&2 "$(basename $0): error: $@"
+  printf "$(basename $0): ${RED}error:${END_COLOR} $@" >&2
   exit 1
 }
 
 warn() {
-  echo >&2 "$(basename $0): warning: $@"
+  printf "$(basename $0): ${RED}warning:${END_COLOR} $@" >&2
 }
 
 mkcleandir() {
@@ -38,7 +47,7 @@ strip_ext() {
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [OPT]... ...
+Usage: $(basename $0) [OPT]... ARG
 <Tool description goes here>
 
 Options:
@@ -82,6 +91,14 @@ while true; do
   esac
 done
 
+usage_short() {
+  cat <<EOF
+Usage: $(basename $0) [OPT]... ARG
+Run \`$(basename $0) -h' for more details.
+EOF
+  exit
+}
+
 if [ $# -eq 0 ]; then
-  usage
+  usage_short
 fi
