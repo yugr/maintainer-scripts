@@ -22,12 +22,20 @@ absolutize() {
 }
 
 error() {
-  printf "$(basename $0): ${RED}error:${END_COLOR} $@" >&2
+  prefix="error:"
+  if test -t 2; then
+    prefix="${RED}${prefix}${END_COLOR}"
+  fi
+  printf "$(basename $0): $prefix $@" >&2
   exit 1
 }
 
 warn() {
-  printf "$(basename $0): ${RED}warning:${END_COLOR} $@" >&2
+  prefix="warning:"
+  if test -t 2; then
+    prefix="${RED}${prefix}${END_COLOR}"
+  fi
+  printf "$(basename $0): $prefix $@" >&2
 }
 
 mkcleandir() {
@@ -63,12 +71,12 @@ me=$(basename $0)
 ARGS=$(getopt -o 'o:hx' --long 'output:,help' -n $(basename $0) -- "$@")
 eval set -- "$ARGS"
 
-OUTPUT=
+OUT=
 
 while true; do
   case "$1" in
     -o | --output)
-      OUTPUT="$2"
+      OUT="$2"
       shift 2
       ;;
     -h | --help)
@@ -92,7 +100,7 @@ while true; do
 done
 
 usage_short() {
-  cat <<EOF
+  cat >&2 <<EOF
 Usage: $(basename $0) [OPT]... ARG
 Run \`$(basename $0) -h' for more details.
 EOF
