@@ -11,6 +11,7 @@ import os.path
 import re
 import subprocess
 import argparse
+import tempfile
 
 me = os.path.basename(__file__)
 
@@ -50,6 +51,28 @@ class Re:
   def groups(self, *args, **kwargs):
     return self.last_match.groups(*args, **kwargs)
 
+# A dummy wrapper to avoid deadlocks with subprocess.PIPE
+def run(args, **kwargs):
+  if 'abort_on_error' in kwargs:
+    abort_on_error = kwargs['abort_on_error']
+    del kwargs['abort_on_error']
+  else:
+    abort_on_error = False
+  out_file = tempfile.mktemp()
+  err_file = tempfile.mktemp()
+  with open(out_file, 'w') as out_fileno, open(err_file, 'w') as err_fileno:
+    p = subprocess.Popen(args, stdout=out_fileno, stderr=err_fileno, **kwargs)
+    p.communicate()
+  with open(out_file, 'r') as f:
+    out = f.read()
+  os.unlink(out_file)
+  with open(err_file, 'r') as f:
+    err = f.read()
+  os.unlink(err_file)
+  if p.returncode != 0 and abort_on_error:
+    error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
+  return p, out, err
+
 def main():
   parser = argparse.ArgumentParser(description="Generate wrappers for shared library functions.")
   parser.add_argument('library', metavar='LIB', help="Library to be wrapped.")
@@ -59,6 +82,7 @@ def main():
   parser.add_argument('--no-dlopen', dest='dlopen', help="Do not emit dlopen call (user must load library himself).", action='store_false')
   parser.set_defaults(dlopen=True)
   parser.add_argument('--library-load-name', help="Use custom name for dlopened library (default is LIB).")
+  parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
 
   args = parser.parse_args()
 
