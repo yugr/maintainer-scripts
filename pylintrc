@@ -1,0 +1,22 @@
+[MASTER]
+
+# Run in parallel by default
+jobs=0
+
+[MESSAGES CONTROL]
+
+# Disable style warnings
+disable=bad-continuation,
+  line-too-long,
+  bad-indentation,
+  invalid-name,
+  too-many-locals,
+  too-many-branches,
+  too-many-statements,
+  too-many-arguments,
+  too-few-public-methods,
+  too-many-instance-attributes,
+  too-many-lines,
+  missing-docstring,
+  misplaced-comparison-constant,
+  global-statement

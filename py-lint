@@ -29,19 +29,7 @@ cd ..
 # on 'from subfolder import submodule' statements
 # in files in subfolders.
 PYTHONPATH=$name${PYTHONPATH:+:$PYTHONPATH} pylint \
-  -d bad-continuation \
-  -d line-too-long \
-  -d bad-indentation \
-  -d invalid-name \
-  -d too-many-locals \
-  -d too-many-branches \
-  -d too-many-statements \
-  -d too-many-arguments \
-  -d too-few-public-methods \
-  -d too-many-instance-attributes \
-  -d too-many-lines \
-  -d missing-docstring \
-  -d misplaced-comparison-constant \
+  --rcfile=$(dirname $0)/pylintrc
   "$@" \
   $name | tee -a $name/$log
 
