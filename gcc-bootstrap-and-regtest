@@ -91,7 +91,7 @@ toc() {
   echo "Total time is $(($DT / 60)) minutes." >> $OUT/times.log
 }
 
-function killtree() {
+killtree() {
   local status
 
   status=0
@@ -109,7 +109,7 @@ function killtree() {
   return $status
 }
 
-function killkids() {
+killkids() {
   for kid in $(ps -o pid --no-headers --ppid $$); do
     killtree $kid TERM
   done

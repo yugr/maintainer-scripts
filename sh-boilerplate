@@ -21,7 +21,7 @@ UNDER='\033[2m'
 
 absolutize() {
   test -e "$1"
-  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+  (cd "$(dirname "$1")"; echo $PWD/$(basename "$1"))
 }
 
 error() {
@@ -48,7 +48,7 @@ mkcleandir() {
 
 isemptydir() {
   #test $(ls -A "$1" | wc -l) = 0
-  test -d "$1" && test $(find "$1" -maxdepth 0 -empty)
+  test -d "$1" && test "$(find "$1" -maxdepth 0 -empty)"
 }
 
 strip_ext() {
@@ -71,7 +71,7 @@ EOF
 
 me=$(basename $0)
 
-ARGS=$(getopt -o 'o:hx' --long 'output:,help' -n $(basename $0) -- "$@")
+ARGS=$(getopt -o 'o:hx' --long 'output:,help' -n "$(basename $0)" -- "$@")
 eval set -- "$ARGS"
 
 OUT=
