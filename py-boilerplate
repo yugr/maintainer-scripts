@@ -78,7 +78,7 @@ def run(args, **kwargs):
     error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
   return p, out, err
 
-def ensure_module(module, package=None):
+def ensure_module(module, package=None, user=True):
   """
   A simple function to install module if it's missing.
   Call like
@@ -91,10 +91,14 @@ def ensure_module(module, package=None):
     exe = sys.executable
     if package is None:
       package = module
-    subprocess.check_call([exe, '-mensurepip'])
-    subprocess.check_call([exe, '-mpip', 'install', package])
-    # Why do we need this?
-    for d in site.getsitepackages():
+    try:
+      subprocess.check_call([exe, '-mensurepip'])
+    except subprocess.CalledProcessError:
+      warn("failed to ensure pip")
+    subprocess.check_call(
+      [exe, '-mpip', 'install'] + (['--user'] if user else []) + [package])
+    # User site packages are often not in PATH by default
+    for d in (site.getusersitepackages() if user else site.getsitepackages()):
       if d not in sys.path:
         sys.path.append(d)
     try:
