@@ -12,6 +12,8 @@ import re
 import subprocess
 import argparse
 import tempfile
+import imp
+import site
 
 me = os.path.basename(__file__)
 
@@ -22,10 +24,13 @@ def error(msg):
   sys.stderr.write('%s: error: %s\n' % (me, msg))
   sys.exit(1)
 
-# "Regex cacher" which allows doing things like
-#   if Re.match(...):
-#     x = Re.group(1)
 class Re:
+  """
+  "Regex cacher" which allows doing things like
+    if Re.match(...):
+      x = Re.group(1)
+  """
+
   last_match = None
 
   @classmethod
@@ -51,8 +56,8 @@ class Re:
   def groups(self, *args, **kwargs):
     return self.last_match.groups(*args, **kwargs)
 
-# A dummy wrapper to avoid deadlocks with subprocess.PIPE
 def run(args, **kwargs):
+  """A dummy wrapper to avoid deadlocks with subprocess.PIPE."""
   if 'abort_on_error' in kwargs:
     abort_on_error = kwargs['abort_on_error']
     del kwargs['abort_on_error']
@@ -72,6 +77,30 @@ def run(args, **kwargs):
   if p.returncode != 0 and abort_on_error:
     error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
   return p, out, err
+
+def ensure_module(module, package=None):
+  """
+  A simple function to install module if it's missing.
+  Call like
+    ensure_module('wx', 'wxPython')
+    ensure_module('configparser')
+  """
+  try:
+    imp.find_module(module)
+  except ImportError:
+    exe = sys.executable
+    if package is None:
+      package = module
+    subprocess.check_call([exe, '-mensurepip'])
+    subprocess.check_call([exe, '-mpip', 'install', package])
+    # Why do we need this?
+    for d in site.getsitepackages():
+      if d not in sys.path:
+        sys.path.append(d)
+    try:
+      imp.find_module(module)
+    except ImportError:
+      error("module '%s' not found in package '%s'" % (module, package))
 
 def main():
   parser = argparse.ArgumentParser(description="Generate wrappers for shared library functions.")
