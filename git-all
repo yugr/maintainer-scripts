@@ -86,12 +86,13 @@ for d_pid in $JOBS; do
   pid=${d_pid#*,}
   echo "=== $me: running in $d..."
   if ! wait $pid; then
-    BAD_REPOS="${BAD_REPOS}$d"
+    BAD_REPOS="${BAD_REPOS} $d"
   fi
   cat $TMP/$(basename $d).log
 done
 
 if test -n "$BAD_REPOS"; then
-  echo >&2 "=== $me: failed in following repositories: $BAD_REPOS"
+  echo >&2 "=== $me: failed in following repositories:"
+  echo $BAD_REPOS | tr ' ' '\n' | sed 's/^/  /'
   exit 1
 fi
