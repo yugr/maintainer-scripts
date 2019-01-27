@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use File::Basename;
+use File::Find;
+use Getopt::Long qw(GetOptions);
+use Data::Dumper;
+
+my $verbose = 0;
+my $help = 0;
+my @excludes;
+
+GetOptions(
+  'help'            => \$help,
+  'verbose+'        => \$verbose,
+  'exclude=s@'      => \@excludes,
+);
+
+if($help) {
+  my $me = basename($0);
+  print <<EOF;
+Usage: $me [OPT]... ROOT...
+
+Describe script here.
+
+OPT can be one of
+  --help                     Print this help and exit.
+  --verbose                  Show more warning.
+  --exclude=GLOB             Exclude files whose names match wildcard.
+EOF
+  exit(0);
+}
+
+if($#ARGV < 0) {
+  print STDERR "No root folders present at command line\n";
+  exit(1);
+}
+
+my @roots = @ARGV;
+
+sub find_files() {
+  # TODO
+}
+
+foreach my $root (@roots) {
+  -d $root or die "$root is not a directory";
+  find({ wanted => \&find_files, no_chdir => 1}, $root);
+}
