@@ -41,7 +41,7 @@ if($#ARGV < 0) {
 my @roots = @ARGV;
 
 sub find_files() {
-  # TODO
+  # TODO (use $File::Find::name, $File::Find::dir)
 }
 
 foreach my $root (@roots) {
