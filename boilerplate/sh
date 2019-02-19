@@ -29,7 +29,7 @@ error() {
   if test -t 2; then
     prefix="${RED}${prefix}${END_COLOR}"
   fi
-  printf "$(basename $0): $prefix $@" >&2
+  printf "$(basename $0): $prefix $@\\n" >&2
   exit 1
 }
 
@@ -38,7 +38,7 @@ warn() {
   if test -t 2; then
     prefix="${RED}${prefix}${END_COLOR}"
   fi
-  printf "$(basename $0): $prefix $@" >&2
+  printf "$(basename $0): $prefix $@\\n" >&2
 }
 
 mkcleandir() {
@@ -54,6 +54,23 @@ isemptydir() {
 strip_ext() {
 #  echo "$1" | sed -e 's!\.[^.]*$!!'
   echo "${1%.*}"
+}
+
+# Get the only file matching regex in directory or abort
+get_the_match() {
+  local N=$(ls -1 "$1" | grep "$2" | wc -l)
+  case $N in
+  0)
+    echo >&2 "No matches for '$2' in $1"
+    exit 1
+    ;;
+  1)
+    ls -1 "$1" | grep "$2" | xargs basename
+    ;;
+  *)
+    echo >&2 "Too many matches for '$2' in $1"
+    exit 1
+  esac
 }
 
 usage() {
