@@ -78,7 +78,7 @@ def run(args, **kwargs):
     error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
   return p, out, err
 
-def ensure_module(module, package=None, user=True):
+def ensure_module(module, package=None, user=True, quiet=False):
   """
   A simple function to install module if it's missing.
   Call like
@@ -88,6 +88,8 @@ def ensure_module(module, package=None, user=True):
   try:
     imp.find_module(module)
   except ImportError:
+    if not quiet:
+      print("Installing Python module %s..." % module)
     exe = sys.executable
     if package is None:
       package = module
