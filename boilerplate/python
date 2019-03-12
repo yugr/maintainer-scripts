@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2017-2018 Yury Gribov
+# Copyright 2017-2019 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -12,8 +12,6 @@ import re
 import subprocess
 import argparse
 import tempfile
-import imp
-import site
 
 me = os.path.basename(__file__)
 
@@ -26,35 +24,35 @@ def error(msg):
 
 class Re:
   """
-  "Regex cacher" which allows doing things like
+  "Regex cacher" gets rid of temporary match objects e.g.
     if Re.match(...):
       x = Re.group(1)
   """
 
-  last_match = None
+  _last_match = None
 
   @classmethod
   def match(self, *args, **kwargs):
-    self.last_match = re.match(*args, **kwargs)
-    return self.last_match
+    self._last_match = re.match(*args, **kwargs)
+    return self._last_match
 
   @classmethod
   def search(self, *args, **kwargs):
-    self.last_match = re.search(*args, **kwargs)
-    return self.last_match
+    self._last_match = re.search(*args, **kwargs)
+    return self._last_match
 
   @classmethod
   def fullmatch(self, *args, **kwargs):
-    self.last_match = re.fullmatch(*args, **kwargs)
-    return self.last_match
+    self._last_match = re.fullmatch(*args, **kwargs)
+    return self._last_match
 
   @classmethod
   def group(self, *args, **kwargs):
-    return self.last_match.group(*args, *kwargs)
+    return self._last_match.group(*args, *kwargs)
 
   @classmethod
   def groups(self, *args, **kwargs):
-    return self.last_match.groups(*args, **kwargs)
+    return self._last_match.groups(*args, **kwargs)
 
 def run(args, **kwargs):
   """A dummy wrapper to avoid deadlocks with subprocess.PIPE."""
@@ -78,12 +76,14 @@ def run(args, **kwargs):
     error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
   return p, out, err
 
+import imp
+import site
+
 def ensure_module(module, package=None, user=True, quiet=False):
   """
-  A simple function to install module if it's missing.
-  Call like
-    ensure_module('wx', 'wxPython')
+  Installs module if it's missing. Call like
     ensure_module('configparser')
+    ensure_module('wx', 'wxPython')
   """
   try:
     imp.find_module(module)
@@ -109,17 +109,32 @@ def ensure_module(module, package=None, user=True, quiet=False):
       error("module '%s' not found in package '%s'" % (module, package))
 
 def main():
-  parser = argparse.ArgumentParser(description="Generate wrappers for shared library functions.")
-  parser.add_argument('library', metavar='LIB', help="Library to be wrapped.")
-  parser.add_argument('--verbose', '-v', action='count', help="Print diagnostic info.", default=0)
-  parser.add_argument('--dlopen-callback', help="Call user-provided custom callback to dlopen library.")
-  parser.add_argument('--dlopen', dest='dlopen', help="Emit dlopen call (user does not need to load library himself).", action='store_true')
-  parser.add_argument('--no-dlopen', dest='dlopen', help="Do not emit dlopen call (user must load library himself).", action='store_false')
-  parser.set_defaults(dlopen=True)
-  parser.add_argument('--library-load-name', help="Use custom name for dlopened library (default is LIB).")
-  parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
+  parser = argparse.ArgumentParser(description="Add program description here.",
+                                   formatter_class=argparse.RawDescriptionHelpFormatter,
+                                   epilog="""\
+Examples:
+  {0} arg
+""".format(me))
+  parser.add_argument('--verbose', '-v',
+                      help="Print diagnostic info.",
+                      action='count', default=0)
+  parser.add_argument('--param', '-p',
+                      help="Set param.",
+                      default='0')
+  parser.add_argument('--flag', '-f',
+                      help="Enables flag.",
+                      dest='flag', action='store_true', default=True)
+  parser.add_argument('--no-flag',
+                      help="Disable flag.",
+                      dest='flag', action='store_false')
+  parser.add_argument('arg',
+                      help="First positional argument.", metavar='ARG')
+  parser.add_argument('rest',
+                      nargs=argparse.REMAINDER, default=[])
 
   args = parser.parse_args()
+
+  # TODO
 
 if __name__ == '__main__':
   main()
