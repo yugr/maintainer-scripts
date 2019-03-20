@@ -125,7 +125,7 @@ Examples:
                       help="Enables flag.",
                       dest='flag', action='store_true', default=True)
   parser.add_argument('--no-flag',
-                      help="Disable flag.",
+                      help="Inverse of --flag.",
                       dest='flag', action='store_false')
   parser.add_argument('arg',
                       help="First positional argument.", metavar='ARG')
