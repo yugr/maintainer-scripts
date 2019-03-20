@@ -5,7 +5,7 @@ use warnings;
 
 use File::Basename;
 use File::Find;
-use Getopt::Long qw(GetOptions);
+use Getopt::Long qw(:config posix_default bundling no_ignore_case);
 use Data::Dumper;
 
 my $verbose = 0;
@@ -13,8 +13,8 @@ my $help = 0;
 my @excludes;
 
 GetOptions(
-  'help'            => \$help,
-  'verbose+'        => \$verbose,
+  'help|h'          => \$help,
+  'verbose+|v+'     => \$verbose,
   'exclude=s@'      => \@excludes,
 );
 
@@ -26,8 +26,8 @@ Usage: $me [OPT]... ROOT...
 Describe script here.
 
 OPT can be one of
-  --help                     Print this help and exit.
-  --verbose                  Show more warning.
+  --help, -h                 Print this help and exit.
+  --verbose, -v              Show more warning.
   --exclude=GLOB             Exclude files whose names match wildcard.
 EOF
   exit(0);
