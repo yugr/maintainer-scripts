@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+me=$(basename $0)
+
+if test $# = 0; then
+  echo "Usage: $me path/to/repo1 path/to/repo2 ..."
+  exit 1
+fi
+
+for REPO in "$@"; do
+  REPO=$(echo "$REPO" | sed 's![\/\\]*$!!')
+
+  if ! test -d "$REPO"; then
+    echo >&2 "Folder $REPO not found"
+    exit 1
+  fi
+
+  if ! test -d "$REPO/.git"; then
+    echo >&2 "Folder $REPO is not a git repo"
+    exit 1
+  fi
+
+  if (cd "$REPO" && git status) 2>&1 | grep -q 'nothing to commit, working tree clean'; then
+    echo >&2 "Cowardly refusing to remove uncommitted changes in $REPO"
+    exit 1
+  fi
+
+  rm -rf "$REPO.git"
+  mv "$REPO"/.git "$REPO.git"
+  git --git-dir="$REPO.git" config --bool core.bare true
+  rm -rf "$REPO"
+
+  echo "Successfully converted $REPO"
+done
