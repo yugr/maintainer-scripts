@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# Shortly describe script here.
+
 use strict;
 use warnings;
 
@@ -10,12 +12,16 @@ use Data::Dumper;
 
 my $verbose = 0;
 my $help = 0;
-my @excludes;
+my $flag;
+my $param;
+my @multi;
 
 GetOptions(
-  'help|h'          => \$help,
-  'verbose+|v+'     => \$verbose,
-  'exclude=s@'      => \@excludes,
+  'help|h'       => \$help,
+  'verbose|v+'   => \$verbose,
+  'flag|f'       => \$flag,
+  'param|p=s'    => \$param,
+  'multi|m=s@'   => \@multi,
 );
 
 if($help) {
@@ -26,15 +32,24 @@ Usage: $me [OPT]... ROOT...
 Describe script here.
 
 OPT can be one of
-  --help, -h                 Print this help and exit.
-  --verbose, -v              Show more warning.
-  --exclude=GLOB             Exclude files whose names match wildcard.
+  --help, -h         Print this help and exit.
+  --verbose, -v      Print diagnostic info
+                     (can be specified more than once).
+  --flag, -f         Describe flag here.
+  --param=P, -p P    Describe scalar parameter here.
+  --multi=P, -m P    Describe array parameter here
+                     (can be specified more than once).
 EOF
   exit(0);
 }
 
 if($#ARGV < 0) {
-  print STDERR "No root folders present at command line\n";
+  my $me = basename($0);
+  print STDERR <<EOF;
+No inputs specified.
+Usage: $me [OPT]... ROOT...
+Run `$me -h' for more details.
+EOF
   exit(1);
 }
 
@@ -46,5 +61,5 @@ sub find_files() {
 
 foreach my $root (@roots) {
   -d $root or die "$root is not a directory";
-  find({ wanted => \&find_files, no_chdir => 1}, $root);
+  find({ wanted => \&find_files, no_chdir => 1 }, $root);
 }
