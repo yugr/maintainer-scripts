@@ -4,6 +4,8 @@
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
+#
+# Shortly describe script here.
 
 import sys
 import os
@@ -109,24 +111,27 @@ def ensure_module(module, package=None, user=True, quiet=False):
       error("module '%s' not found in package '%s'" % (module, package))
 
 def main():
-  parser = argparse.ArgumentParser(description="Add program description here.",
+  parser = argparse.ArgumentParser(description="Describe script here.",
                                    formatter_class=argparse.RawDescriptionHelpFormatter,
                                    epilog="""\
 Examples:
-  {0} arg
+  $ python {0} arg
 """.format(me))
-  parser.add_argument('--verbose', '-v',
-                      help="Print diagnostic info.",
-                      action='count', default=0)
-  parser.add_argument('--param', '-p',
-                      help="Set param.",
-                      default='0')
   parser.add_argument('--flag', '-f',
-                      help="Enables flag.",
+                      help="Describe flag here.",
                       dest='flag', action='store_true', default=True)
   parser.add_argument('--no-flag',
                       help="Inverse of --flag.",
                       dest='flag', action='store_false')
+  parser.add_argument('--param', '-p',
+                      help="Describe scalar parameter here.",
+                      default='0')
+  parser.add_argument('--multi', '-m',
+                      help="Describe array parameter here (can be specified more than once).",
+                      action='append')
+  parser.add_argument('--verbose', '-v',
+                      help="Print diagnostic info (can be specified more than once).",
+                      action='count', default=0)
   parser.add_argument('arg',
                       help="First positional argument.", metavar='ARG')
   parser.add_argument('rest',

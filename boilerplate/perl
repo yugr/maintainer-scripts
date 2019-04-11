@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# Copyright 2017-2019 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+# 
 # Shortly describe script here.
 
 use strict;
@@ -16,34 +21,28 @@ my $flag;
 my $param;
 my @multi;
 
-GetOptions(
-  'help|h'       => \$help,
-  'verbose|v+'   => \$verbose,
-  'flag|f'       => \$flag,
-  'param|p=s'    => \$param,
-  'multi|m=s@'   => \@multi,
-);
-
-if($help) {
+sub usage() {
   my $me = basename($0);
   print <<EOF;
 Usage: $me [OPT]... ROOT...
-
 Describe script here.
 
 OPT can be one of
-  --help, -h         Print this help and exit.
-  --verbose, -v      Print diagnostic info
-                     (can be specified more than once).
   --flag, -f         Describe flag here.
   --param=P, -p P    Describe scalar parameter here.
   --multi=P, -m P    Describe array parameter here
                      (can be specified more than once).
+  --help, -h         Print this help and exit.
+  --verbose, -v      Print diagnostic info
+                     (can be specified more than once).
+
+Examples:
+  \$ $me -f ROOT
 EOF
   exit(0);
 }
 
-if($#ARGV < 0) {
+sub usage_short() {
   my $me = basename($0);
   print STDERR <<EOF;
 No inputs specified.
@@ -52,6 +51,17 @@ Run `$me -h' for more details.
 EOF
   exit(1);
 }
+
+GetOptions(
+  'help|h'       => \$help,
+  'verbose|v+'   => \$verbose,
+  'flag|f'       => \$flag,
+  'param|p=s'    => \$param,
+  'multi|m=s@'   => \@multi,
+);
+
+usage() if $help;
+usage_short() if $#ARGV < 0;
 
 my @roots = @ARGV;
 
