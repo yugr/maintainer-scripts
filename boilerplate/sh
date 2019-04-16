@@ -151,3 +151,6 @@ while true; do
 done
 
 test $# -gt 0 || usage_short
+
+TMP=$(mktemp -d)
+trap "rm -rf $TMP" EXIT
