@@ -21,14 +21,14 @@ error() {
 
 print_short_help() {
   cat <<EOF
-Usage: `basename $0` [options] src-dir [cmake-options]
-Run \``basename $0` -h' for more details.
+Usage: $(basename $0) [options] src-dir [cmake-options]
+Run \`$(basename $0) -h' for more details.
 EOF
 }
 
 print_help() {
   cat <<EOF
-Usage: `basename $0` [options] src-dir [cmake-options]
+Usage: $(basename $0) [options] src-dir [cmake-options]
 Configure and build LLVM in current directory with typical options.
 
 Options:
@@ -46,7 +46,7 @@ EOF
 }
 
 NCORES=$(grep -c '^processor' /proc/cpuinfo)
-NJOBS=$((3 * $NCORES / 2))
+NJOBS=$((3 * NCORES / 2))
 
 INSTALL_DIR=$HOME/install/$(basename $(pwd))
 CMAKE_FLAGS="-DLLVM_ENABLE_ASSERTIONS=ON -DBUILD_SHARED_LIBS=ON -DLLVM_TARGETS_TO_BUILD=X86 -DCOMPILER_RT_BUILD_SHARED_ASAN=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DCMAKE_BUILD_TYPE=RelWithDebInfo"
@@ -134,7 +134,6 @@ if [ $(ls | wc -l) -gt 0 ]; then
 fi
 
 HOST=x86_64-unknown-linux-gnu
-TARGET=$HOST
 
 TIME_START=$(date +%s)
 
@@ -155,6 +154,6 @@ if test -n "$TEST"; then
   nice make VERBOSE=1 check-all 2>&1 | tee -a $LOG
 fi
 
-DT=$(($(date +%s) - $TIME_START))
-echo "Total time is $(($DT / 60)) minutes (using $NJOBS cores)." > times.log
+DT=$(($(date +%s) - TIME_START))
+echo "Total time is $((DT / 60)) minutes (using $NJOBS cores)." > times.log
 

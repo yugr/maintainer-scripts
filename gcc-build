@@ -21,14 +21,14 @@ error() {
 
 print_short_help() {
   cat <<EOF
-Usage: `basename $0` [options] src-dir [configure-options]
-Run \``basename $0` -h' for more details.
+Usage: $(basename $0) [options] src-dir [configure-options]
+Run \`$(basename $0) -h' for more details.
 EOF
 }
 
 print_help() {
   cat <<EOF
-Usage: `basename $0` [options] src-dir [configure-options]
+Usage: $(basename $0) [options] src-dir [configure-options]
 Configure and build GCC in current directory with typical options.
 By default builds only C and C++ compilers without bootstrap.
 
@@ -53,7 +53,7 @@ EOF
 }
 
 NCORES=$(grep -c '^processor' /proc/cpuinfo)
-NJOBS=$((3 * $NCORES / 2))
+NJOBS=$((3 * NCORES / 2))
 
 BOOTSTRAP='--disable-bootstrap --enable-languages=c,c++'
 if test -z "${CFGFLAGS:-}"; then
@@ -182,5 +182,5 @@ if test -n "$INSTALL"; then
   nice make install 2>&1 | tee -a output.log
 fi
 
-DT=$(($(date +%s) - $TIME_START))
-echo "Total time is $(($DT / 60)) minutes (using $NJOBS cores)." > times.log
+DT=$(($(date +%s) - TIME_START))
+echo "Total time is $((DT / 60)) minutes (using $NJOBS cores)." > times.log

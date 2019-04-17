@@ -10,7 +10,7 @@
 set -eu
 
 if [ $# != 1 -a $# != 2 ]; then
-	echo "Syntax: `basename $0` REF-DIR [NEW-DIR]" >&2
+	echo "Syntax: $(basename $0) REF-DIR [NEW-DIR]" >&2
 	exit 1
 fi
 

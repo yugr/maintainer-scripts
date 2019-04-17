@@ -105,7 +105,7 @@ if test $# = 0; then
 fi
 
 NJOBS=$(grep -c '^processor' /proc/cpuinfo)
-NJOBS=$(($NJOBS * 3 / 2))
+NJOBS=$((NJOBS * 3 / 2))
 
 reset_opts
 

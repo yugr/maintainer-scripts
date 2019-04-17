@@ -88,7 +88,7 @@ toc() {
   TIME_END=$(date +%s)
   echo "Finished $1: $(date)" >> $OUT/times.log
   DT=$((TIME_END - TIME_START))
-  echo "Total time is $(($DT / 60)) minutes." >> $OUT/times.log
+  echo "Total time is $((DT / 60)) minutes." >> $OUT/times.log
 }
 
 killtree() {
@@ -150,7 +150,7 @@ CFGFLAGS=
 OUT=${TMPDIR:-/tmp}/$me-$USER-$$
 
 NJOBS=$(( $(grep -c '^processor' /proc/cpuinfo) * 3 / 2 ))
-NJOBS=$(( $NJOBS / 2 ))
+NJOBS=$((NJOBS / 2))
 if [ $NJOBS = 0 ]; then
   NJOBS=1
 fi
