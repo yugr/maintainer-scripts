@@ -14,6 +14,7 @@ import re
 import subprocess
 import argparse
 import tempfile
+import atexit
 
 me = os.path.basename(__file__)
 
@@ -119,7 +120,7 @@ Examples:
 """.format(me))
   parser.add_argument('--flag', '-f',
                       help="Describe flag here.",
-                      dest='flag', action='store_true', default=True)
+                      dest='flag', action='store_true', default=False)
   parser.add_argument('--no-flag',
                       help="Inverse of --flag.",
                       dest='flag', action='store_false')
@@ -139,7 +140,12 @@ Examples:
 
   args = parser.parse_args()
 
+  test_file = tempfile.mktemp()
+  atexit.register(lambda: os.unlink(test_file))
+
   # TODO
 
+  return 0
+
 if __name__ == '__main__':
-  main()
+  sys.exit(main())
