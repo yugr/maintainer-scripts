@@ -42,9 +42,10 @@ EOF
   exit(0);
 }
 
-sub usage_short() {
+sub usage_short($) {
   my $me = basename($0);
   print STDERR <<EOF;
+$_[0]
 No inputs specified.
 Usage: $me [OPT]... ROOT...
 Run `$me -h' for more details.
@@ -61,7 +62,7 @@ GetOptions(
 );
 
 usage() if $help;
-usage_short() if $#ARGV < 0;
+usage_short('No inputs specified.') if $#ARGV < 0;
 
 my @roots = @ARGV;
 
@@ -73,3 +74,12 @@ foreach my $root (@roots) {
   -d $root or die "$root is not a directory";
   find({ wanted => \&find_files, no_chdir => 1 }, $root);
 }
+
+my $file = $ARGV[0];
+open FILE, $file or die "Failed to open $file";
+while(<FILE>) {
+  s/[\r\n]//g;
+
+  # TODO
+}
+close FILE;
