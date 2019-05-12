@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Copyright 2019 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
 # A simple wrapper for llvm-splitlog
 # so that one can simply run:
 #   $ llvm-collect-logs clang tmp.c -S
