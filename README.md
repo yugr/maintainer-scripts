@@ -9,8 +9,9 @@ This repo contains a bunch of scripts which can be useful for typical toolchain/
 * `gcc-index`: set up ctags for GCC source dir
 * `gcc-debug`: run GCC compiler proper under debugger
 * `gcc-predefs`: print predefined GCC macros
+* `llvm-collect-logs`, `llvm-splitlog`: generate Clang debug logs
 * `git-all`: run Git command in all repos in current folder
-* `git-bareize : convert normal git repo to bare format
+* `git-bareize` : convert normal git repo to bare format
 * `gnu-compare-projects`: compare ChangeLogs of two OSS projects
 * `insert-license-header`: insert license header into all files in a folder
 * `py-lint`: wrapper around `pylint` to make it more usable
