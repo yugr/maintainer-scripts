@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# A simple wrapper for llvm-splitlog
+# so that one can simply run:
+#   $ llvm-collect-logs clang tmp.c -S
+
+set -eux
+
+case "$1" in
+*clang | *clang.exe)
+  DEBUG_FLAGS='-mllvm -print-after-all'
+  ;;
+*llc | *llc.exe)
+  DEBUG_FLAGS='-print-after-all'
+  ;;
+*)
+  echo >&2 "Unknown executable: $1"
+  exit 1
+  ;;
+esac
+
+"$@" $DEBUG_FLAGS 2>debug.log || true
+$(dirname $0)/llvm-splitlog.pl -o debug debug.log

@@ -1,0 +1,109 @@
+#!/usr/bin/perl
+
+# Split LLVM -print-after-all log to separate files.
+
+use strict;
+use warnings;
+
+use File::Find;
+use File::Basename;
+use Getopt::Long qw(:config posix_default bundling no_ignore_case);
+
+my $v;
+my $help;
+my $out = '.';
+
+GetOptions(
+  'verbose|v' => \$v,
+  'help|h'    => \$help,
+  'o=s'       => \$out
+);
+
+if ($help) {
+  my $me = basename($0);
+  print <<EOF;
+$me [OPT]... [FILE]
+Split LLVM -print-after-all log to separate files.
+
+If FILE is omitted, log is read from stdin.
+
+Options:
+  -h, --help       Print help and exit.
+  -v, --verbose    Print debug info.
+  -o DIR           Store files in directory DIR (default is debug/).
+EOF
+  exit(1);
+}
+
+if ($out ne '.' and ! -d $out) {
+  mkdir $out or die "Failed to make directory '$out'";
+}
+
+my $file = @ARGV ? shift(@ARGV) : '-';
+
+my $ndigits = 4;
+
+my @passes;
+my $num = 0;
+my $pass = 'Header';
+my $when;
+my $fun;
+my $multifun = 0;
+my $text;
+my $clean = 1;
+
+sub unlink_old_logs() {
+  if (basename($_) =~ /^[0-9]+-.*-$when\.log$/) {
+    unlink($File::Find::name);
+  }
+}
+
+sub print_pass {
+  if ($clean) {
+    # We can clean only once we know $when
+    find({ wanted => \&unlink_old_logs, no_chdir => 1}, $out);
+    $clean = 0;
+  }
+  my $file = sprintf "%s/%0${ndigits}d-%s%s-%s.log", $out, $num, (defined $fun ? "$fun-" : ''), $pass, $when;
+  push @passes, $file;
+  open FILE, ">$file" or die "Failed to open $file";
+  print FILE "$text";
+  close FILE;
+}
+
+open INP, "<$file" or die "Failed to open '$file'";
+while (<INP>) {
+  my $line = $_;
+  $line =~ s/[\r\n]*//g;
+  if ($line =~ /IR Dump (Before|After) (.*) \*\*\*/) {
+    $when = $1;
+    print_pass();
+    ++$num;
+    $pass = $2;
+    $pass =~ s/(\s+|\/)/-/g;
+    $pass =~ s/[^a-zA-Z0-9_]*//g;
+    $fun = undef;
+    $multifun = 0;
+    $text = "$line\n";
+  } else {
+    if ($line =~ /Machine code for function ([^ :]+)/) {
+      die "Duplicate function attribution in pass $pass: $fun and $1:\n$line\n" if defined $fun and $fun ne $1;
+      $fun = $1 
+    } elsif (! $multifun and $line =~ /define .* @([_A-Za-z0-9]+)\(/) {
+      if (defined $fun) {
+        $fun = undef;
+        $multifun = 1;
+      } else {
+        $fun = $1;
+      }
+    }
+    $text .= "$line\n";
+  }
+}
+close INP;
+
+print_pass();
+
+open FILE, ">$out/passes.txt" or die "Failed to write $out/passes.txt";
+print FILE "$_\n" for @passes;
+close FILE;
