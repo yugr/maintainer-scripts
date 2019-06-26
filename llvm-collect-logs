@@ -8,8 +8,17 @@
 # A simple wrapper for llvm-splitlog
 # so that one can simply run:
 #   $ llvm-collect-logs clang tmp.c -S
+# or
+#   $ llvm-collect-logs -o logs-new clang ...
 
 set -eux
+
+if test "${1:-}" = -o; then
+  O=$2
+  shift 2
+else
+  O=debug
+fi
 
 case "$1" in
 *clang | *clang.exe)
@@ -24,5 +33,5 @@ case "$1" in
   ;;
 esac
 
-"$@" $DEBUG_FLAGS 2>debug.log || true
-$(dirname $0)/llvm-splitlog.pl -o debug debug.log
+"$@" $DEBUG_FLAGS 2>$O.log || true
+$(dirname $0)/llvm-splitlog.pl -o $O $O.log
