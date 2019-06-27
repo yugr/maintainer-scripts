@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# Copyright 2019 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
 # Print short summary of LLVM errors for easier deduplication of mass runs.
 
 use strict;
