@@ -15,6 +15,20 @@ use File::Find;
 use Getopt::Long qw(:config posix_default bundling no_ignore_case);
 use Data::Dumper;
 
+# File::Slurp not installed by default...
+sub read_file($) {
+  my $f = $_[0];
+  open FILE, $f or die "Failed to open $f";
+  my @lines;
+  while(<FILE>) {
+    s/[\r\n]+//g;
+    push @lines, $_;
+  }
+  close FILE;
+  return @lines if(wantarray);
+  return join("\n", @lines);
+}
+
 my $V = 0;
 my $help = 0;
 my $flag;
