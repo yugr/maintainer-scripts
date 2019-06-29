@@ -1,0 +1,18 @@
+// Copyright 2019 Yury Gribov
+// 
+// Use of this source code is governed by MIT license that can be
+// found in the LICENSE.txt file.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+__attribute__((noinline))
+void foo() {
+}
+
+int main() {
+  foo();
+  printf("Hello world\n");
+  return 0;
+}
