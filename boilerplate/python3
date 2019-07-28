@@ -16,6 +16,37 @@ import argparse
 import tempfile
 import atexit
 
+import imp, site
+
+def ensure_module(module, package=None, user=True, quiet=False):
+  """
+  Installs module if it's missing. Call like
+    ensure_module('configparser')
+    ensure_module('wx', 'wxPython')
+  """
+  try:
+    imp.find_module(module)
+  except ImportError:
+    if not quiet:
+      print("Installing Python module %s..." % module)
+    exe = sys.executable
+    if package is None:
+      package = module
+    try:
+      subprocess.check_call([exe, '-mensurepip'])
+    except subprocess.CalledProcessError:
+      warn("failed to ensure pip")
+    subprocess.check_call(
+      [exe, '-mpip', 'install'] + (['--user'] if user else []) + [package])
+    # User site packages are often not in PATH by default
+    for d in (site.getusersitepackages() if user else site.getsitepackages()):
+      if d not in sys.path:
+        sys.path.append(d)
+    try:
+      imp.find_module(module)
+    except ImportError:
+      error("module '%s' not found in package '%s'" % (module, package))
+
 me = os.path.basename(__file__)
 
 def warn(msg):
@@ -78,38 +109,6 @@ def run(args, **kwargs):
   if p.returncode != 0 and abort_on_error:
     error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
   return p, out, err
-
-import imp
-import site
-
-def ensure_module(module, package=None, user=True, quiet=False):
-  """
-  Installs module if it's missing. Call like
-    ensure_module('configparser')
-    ensure_module('wx', 'wxPython')
-  """
-  try:
-    imp.find_module(module)
-  except ImportError:
-    if not quiet:
-      print("Installing Python module %s..." % module)
-    exe = sys.executable
-    if package is None:
-      package = module
-    try:
-      subprocess.check_call([exe, '-mensurepip'])
-    except subprocess.CalledProcessError:
-      warn("failed to ensure pip")
-    subprocess.check_call(
-      [exe, '-mpip', 'install'] + (['--user'] if user else []) + [package])
-    # User site packages are often not in PATH by default
-    for d in (site.getusersitepackages() if user else site.getsitepackages()):
-      if d not in sys.path:
-        sys.path.append(d)
-    try:
-      imp.find_module(module)
-    except ImportError:
-      error("module '%s' not found in package '%s'" % (module, package))
 
 def main():
   parser = argparse.ArgumentParser(description="Describe script here.",
