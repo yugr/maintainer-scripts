@@ -42,15 +42,17 @@ if ! test -x "$CC"; then
 	exit 1
 fi
 
+# TODO: source gcc/gdbinit.in?
 SRC=$($GCC -v 2>&1 | sed -ne '/^Configured with:/{s/Configured with: \([^ ]\+\)*\/configure .*/\1/; p}')
 GDBHOOKS=$SRC/gcc/gdbhooks.py
 if ! test -f "$GDBHOOKS"; then
-	echo >&2 "Failed to find GDB hooks"
-	exit 1
+	echo >&2 "warning: failed to find GDB hooks"
+else
+  GDBHOOKS="-x $GDBHOOKS"
 fi
 
 # Need eval because of escapes in GDBFLAGS
-eval gdb -x $GDBHOOKS \
+eval gdb $GDBHOOKS \
 	-ex "'b internal_error'" \
 	-ex "'set pagination off'" \
 	-ex "'set print pretty on'" \
