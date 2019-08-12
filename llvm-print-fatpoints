@@ -1,0 +1,284 @@
+#!/usr/bin/perl
+
+# Copyright 2019 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# A simple script for printing fatpoints from LLVM MIR dump.
+# Run `print_fatpoints.pl -h' for more details.
+
+use strict;
+use warnings;
+
+use Getopt::Long qw(GetOptions);
+use Data::Dumper;
+
+my $v = 0;
+my $help = 0;
+my $no_header = 0;
+
+GetOptions(
+  'help|h'      => \$help,
+  'verbose|v+'  => \$v,
+  'no-header'   => \$no_header,
+);
+
+if($help) {
+  print <<EOF;
+llvm-print-fatpoints.pl [OPT]... < FILE
+Print fatpoints based on MIR dump of _single_ LLVM pass.
+
+Usually you'll want to run it on dump of a pass
+which goes right before GreedyRegisterAllocator .
+
+Options:
+  --help, -h     Print help and exit.
+  --verbose, -v  Output diagnostic info (may be specified more than once).
+  --no-header    Do not expect function header in dump.
+
+Example:
+  \$ print_fatpoints.pl < 0942-_ZN3ABC3fooEPsj-LiveRegisterMatrix-After.log
+
+EOF
+  exit(0);
+}
+
+sub cmp_hashes_1($$) {
+  my ($a, $b) = @_;
+  for my $k (keys %$a) {
+    return 0 if (! exists $b->{$k} or $b->{$k} ne $a->{$k});
+  }
+  return 1;
+}
+
+sub cmp_hashes($$) {
+  my ($a, $b) = @_;
+  return (cmp_hashes_1($a, $b) and cmp_hashes_1($b, $a));
+}
+
+my $in_func = $no_header;  # Do not look for header if user wants this
+my $bb;
+
+my %cfg;
+my @bb_list;
+my %symtab;
+
+sub dumpp($) {
+  my $suffix = $_[0];
+
+  print "MIR ($suffix)\n";
+  for my $bb (@bb_list) {
+    print <<EOF;
+  $bb->{name}
+    <- @{[ join(', ', map {ref $_ ? $_->{name} : $_} @{$bb->{preds}}) ]}
+    -> @{[ join(', ', map {ref $_ ? $_->{name} : $_} @{$bb->{succs}}) ]}
+    in: @{[ join(', ', sort keys %{$bb->{in}}) ]}
+    out: @{[ join(', ', sort keys %{$bb->{out}}) ]}
+EOF
+    for my $inst (@{$bb->{insts}}) {
+      print <<EOF;
+    $inst->{text}
+      uid:$inst->{uid}
+      uses: @{[ join(', ', @{$inst->{uses}}) ]}
+      defs: @{[ join(', ', @{$inst->{defs}}) ]}
+      in: @{[ join(', ', sort keys %{$inst->{in}}) ]}
+      out: @{[ join(', ', sort keys %{$inst->{out}}) ]}
+EOF
+    }
+  }
+
+  print "\nSymtab ($suffix)\n";
+  my %rc_map;
+  for my $reg (sort keys %symtab) {
+    my $rc = $symtab{$reg};
+    $rc_map{$rc} = [] if ! exists $rc_map{$rc};
+    push @{$rc_map{$rc}}, $reg;
+  }
+  for my $rc (sort keys %rc_map) {
+    print "  $rc: " . join(', ', @{$rc_map{$rc}}) . "\n";
+  }
+}
+
+while(<>) {
+  s/[\r\n]*//g;
+
+  if(/^# Machine code for function/) {
+    $in_func = 1;
+  } elsif(/^# End machine code for function/) {
+    $in_func = 0;
+    last;
+  }
+
+  next if !$in_func;
+
+  # 0B      BB#0: derived from LLVM BB %entry
+  s/^[0-9]+[A-Z]\s+//;
+
+  if(/^(BB#[0-9]+)/) {
+    $cfg{$1} = $bb = { name => $1, insts => [] };
+    push @bb_list, $bb;
+  } elsif(/(Predecessors|Successors) according to CFG:/) {
+    my $type = $1;
+    my @names = /(BB#[0-9]+)/g;
+    $bb->{$type eq 'Predecessors' ? 'preds' : 'succs'} = \@names;
+    print "Adding '$type' neighbors for $bb->{name}: @names \n" if $v > 1;
+  } elsif(/ uid:([0-9]+)/) {
+    # %vreg0<def>, %vreg23<def,dead> = frob97_addrr %vreg1, %vreg46; GR32:%vreg0 DR32:%vreg46
+    my $uid = $1;
+    my $text = $_;
+
+    $text =~ /(.*);/;
+    my $mnemonic = $1;
+
+    $text =~ / uid:[0-9]+ ?(.*)/;
+    my $attr = $1;
+    $attr =~ s/ dbg:.*//;
+
+    print "Split '$text' to\n  $mnemonic\n  $attr\n" if $v > 1;
+
+    # Collect regclasses
+    my %op_idx;
+    for my $rc_regs (split(/\s+/, $attr)) {
+      $rc_regs =~ /^([^:]+):(.*)/ or die "Unrecognized regclass $rc_regs in '$text'";
+      print "RC info: $rc_regs\n" if $v > 1;
+      my $rc = $1;
+      my @regs = split(/,/, $2);
+      for my $reg (@regs) {
+        #! exists $op_idx{$reg} or die "Dup entry for register $reg in '$text'";
+        $op_idx{$reg} = 1;
+        if(exists $symtab{$reg}) {
+          my $old_rc = $symtab{$reg};
+          $old_rc eq $rc or die "Mismatched types for register $reg in '$text': $rc vs $old_rc";
+        } else {
+          $symtab{$reg} = $rc;
+          print "Setting type $rc for $reg\n" if $v > 1;
+        }
+      }
+    }
+    my $inst = {
+      uid => $uid,
+      text => $mnemonic,
+      uses => [],
+      defs => [],
+    };
+    for my $reg (sort keys %op_idx) {
+      my @insts = ($mnemonic =~ /$reg(?::[A-Za-z0-9_]+)?(?:<[^>]+)?/g);
+      for my $x (@insts) {
+        $_ =~ /$reg(:[A-Za-z0-9_]+)?(<[^>]+)?/ or die;
+        my $subreg = $1;
+        my $attrs = defined $2 ? $2 : '';
+        # Subreg def is both use and def unless there is a read-unde mark
+        if($subreg and $attrs =~ /<def/) {
+          if($attrs !~ /read-undef/) {
+            push @{$inst->{uses}}, $reg;
+            print "Found implicit use of $reg ('$attrs')\n" if $v > 1;
+          }
+        }
+        if($attrs =~ /<def/) {
+          push @{$inst->{defs}}, $reg;
+          print "Found def of $reg ('$attrs')\n" if $v > 1;
+        }
+        if(! $attrs or $attrs !~ /\bdef\b/) {
+          push @{$inst->{uses}}, $reg;
+          print "Found use of $reg ('$attrs')\n" if $v > 1;
+        }
+      }
+    }
+    push @{$bb->{insts}}, $inst;
+  }
+}
+
+if($v) {
+  dumpp('after parse');
+  print "\n";
+}
+
+# Resolve CFG
+
+for my $bb (@bb_list) {
+  for my $type ('succs', 'preds') {
+    my @neighbors;
+    for my $other_name (@{$bb->{$type}}) {
+      exists $cfg{$other_name} or die "Unable to resolve $other_name in CFG (referenced in $type of $bb->{name})";
+      push @neighbors, $cfg{$other_name};
+    }
+    $bb->{$type} = \@neighbors;
+  }
+}
+
+# Compute liveness
+
+my %wl_idx;
+my @wl;
+
+for my $bb (@bb_list) {
+  $bb->{in} = {};
+  $bb->{out} = {};
+  push @wl, $bb;
+  $wl_idx{$bb->{name}} = 1;
+}
+
+my $iter = 0;
+while(@wl) {
+  ++$iter;
+  if($v > 2) {
+    dumpp("dataflow iteration no. $iter");
+    print "\n";
+  }
+  my $bb = pop @wl;  # Start from exit block
+  delete $wl_idx{$bb->{name}};
+  my %live = %{$bb->{out}};
+  for my $inst (reverse(@{$bb->{insts}})) {
+    $inst->{out} = {%live};
+    # kill
+    for my $reg_name (@{$inst->{defs}}) {
+      my $reg = $inst->{op_map}->{$reg_name};
+      delete $live{$reg_name};
+    }
+    # gen
+    for my $reg_name (@{$inst->{uses}}) {
+      my $reg = $inst->{op_map}->{$reg_name};
+      $live{$reg_name} = 1;
+    }
+    $inst->{in} = {%live};
+  }
+  if(!cmp_hashes($bb->{in}, \%live)) {
+    $bb->{in} = \%live;
+    for my $pred (@{$bb->{preds}}) {
+      for my $reg (sort keys %live) {
+        $pred->{out}->{$reg} = 1;
+      }
+      next if exists $wl_idx{$pred->{name}};
+      push @wl, $pred;
+      $wl_idx{$pred->{name}} = 1;
+      print "Pushing $pred->{name} after computation of $bb->{name}\n" if $v > 1;
+    }
+  }
+} 
+
+if($v) {
+  dumpp('after liveness analysis');
+  print "\n";
+}
+
+# Finally print fatpoints
+
+print "FATPOINTS:\n";
+for my $bb (@bb_list) {
+  print "$bb->{name}\n";
+  for my $inst (@{$bb->{insts}}) {
+    print "  $inst->{text}\n";
+    my %rc_map;
+    for my $reg (sort keys %{$inst->{in}}) {
+      my $rc = $symtab{$reg};
+      $rc_map{$rc} = [] if ! exists $rc_map{$rc};
+      push @{$rc_map{$rc}}, $reg;
+    }
+    for my $rc (sort keys %rc_map) {
+      my $count = scalar @{$rc_map{$rc}};
+      my $reg_str = join(', ', @{$rc_map{$rc}});
+      print "    $rc ($count): $reg_str\n";
+    }
+  }
+}
