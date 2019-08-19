@@ -79,7 +79,6 @@ EOF
     for my $inst (@{$bb->{insts}}) {
       print <<EOF;
     $inst->{text}
-      uid:$inst->{uid}
       uses: @{[ join(', ', @{$inst->{uses}}) ]}
       defs: @{[ join(', ', @{$inst->{defs}}) ]}
       in: @{[ join(', ', sort keys %{$inst->{in}}) ]}
@@ -123,15 +122,13 @@ while(<>) {
     my @names = /(BB#[0-9]+)/g;
     $bb->{$type eq 'Predecessors' ? 'preds' : 'succs'} = \@names;
     print "Adding '$type' neighbors for $bb->{name}: @names \n" if $v > 1;
-  } elsif(/ uid:([0-9]+)/) {
-    # %vreg0<def>, %vreg23<def,dead> = frob97_addrr %vreg1, %vreg46; GR32:%vreg0 DR32:%vreg46
-    my $uid = $1;
+  } elsif(/^\t/) {
+    # "%vreg0<def>, %vreg23<def,dead> = frob97_addrr %vreg1, %vreg46; GR32:%vreg0 DR32:%vreg46
     my $text = $_;
 
     $text =~ /(.*);/;
     my $mnemonic = $1;
 
-    $text =~ / uid:[0-9]+ ?(.*)/;
     my $attr = $1;
     $attr =~ s/ dbg:.*//;
 
@@ -157,7 +154,6 @@ while(<>) {
       }
     }
     my $inst = {
-      uid => $uid,
       text => $mnemonic,
       uses => [],
       defs => [],
@@ -168,7 +164,7 @@ while(<>) {
         $_ =~ /$reg(:[A-Za-z0-9_]+)?(<[^>]+)?/ or die;
         my $subreg = $1;
         my $attrs = defined $2 ? $2 : '';
-        # Subreg def is both use and def unless there is a read-unde mark
+        # Subreg def is both use and def unless there is a read-undef flag
         if($subreg and $attrs =~ /<def/) {
           if($attrs !~ /read-undef/) {
             push @{$inst->{uses}}, $reg;
@@ -233,12 +229,10 @@ while(@wl) {
     $inst->{out} = {%live};
     # kill
     for my $reg_name (@{$inst->{defs}}) {
-      my $reg = $inst->{op_map}->{$reg_name};
       delete $live{$reg_name};
     }
     # gen
     for my $reg_name (@{$inst->{uses}}) {
-      my $reg = $inst->{op_map}->{$reg_name};
       $live{$reg_name} = 1;
     }
     $inst->{in} = {%live};
