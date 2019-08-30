@@ -112,32 +112,39 @@ while(<>) {
   next if !$in_func;
 
   # 0B      BB#0: derived from LLVM BB %entry
-  s/^[0-9]+[A-Z]\s+//;
+  s/^[0-9]+[A-Z]\t//;
 
   if(/^(BB#[0-9]+)/) {
     $cfg{$1} = $bb = { name => $1, insts => [] };
     push @bb_list, $bb;
-  } elsif(/(Predecessors|Successors) according to CFG:/) {
+  } elsif(/^\s*(Predecessors|Successors) according to CFG:/) {
     my $type = $1;
     my @names = /(BB#[0-9]+)/g;
     $bb->{$type eq 'Predecessors' ? 'preds' : 'succs'} = \@names;
     print "Adding '$type' neighbors for $bb->{name}: @names \n" if $v > 1;
+  } elsif (/Live Ins/) {
+    # Skip
   } elsif(/^\t/) {
     # "%vreg0<def>, %vreg23<def,dead> = frob97_addrr %vreg1, %vreg46; GR32:%vreg0 DR32:%vreg46
     my $text = $_;
 
-    $text =~ /(.*);/;
-    my $mnemonic = $1;
+    $text =~ s/^\s+//;
 
-    my $attr = $1;
+    $text =~ /([^;]*);(.*)/;
+    my $mnemonic = $1;
+    my $attr = $2;
+
+    # Strip non-reg attrs
+    $attr =~ s/ mem:[^\s]+//g;
     $attr =~ s/ dbg:.*//;
+    $attr =~ s/^\s+|\s+$//;
 
     print "Split '$text' to\n  $mnemonic\n  $attr\n" if $v > 1;
 
     # Collect regclasses
     my %op_idx;
     for my $rc_regs (split(/\s+/, $attr)) {
-      $rc_regs =~ /^([^:]+):(.*)/ or die "Unrecognized regclass $rc_regs in '$text'";
+      $rc_regs =~ /^([^:]+):([^:]+)/ or die "Unrecognized regclass $rc_regs in '$attr'";
       print "RC info: $rc_regs\n" if $v > 1;
       my $rc = $1;
       my @regs = split(/,/, $2);
@@ -182,6 +189,8 @@ while(<>) {
       }
     }
     push @{$bb->{insts}}, $inst;
+  } else {
+    print "Skipping unknown line: $_\n" if $v > 1;
   }
 }
 
