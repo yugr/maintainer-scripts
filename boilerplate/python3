@@ -16,7 +16,20 @@ import argparse
 import tempfile
 import atexit
 
-import imp, site
+me = os.path.basename(__file__)
+
+def warn(msg):
+  """
+  Print nicely-formatted warning message.
+  """
+  sys.stderr.write('%s: warning: %s\n' % (me, msg))
+
+def error(msg):
+  """
+  Print nicely-formatted error message and exit.
+  """
+  sys.stderr.write('%s: error: %s\n' % (me, msg))
+  sys.exit(1)
 
 def ensure_module(module, package=None, user=True, quiet=False):
   """
@@ -24,6 +37,7 @@ def ensure_module(module, package=None, user=True, quiet=False):
     ensure_module('configparser')
     ensure_module('wx', 'wxPython')
   """
+  import imp, site
   try:
     imp.find_module(module)
   except ImportError:
@@ -46,15 +60,6 @@ def ensure_module(module, package=None, user=True, quiet=False):
       imp.find_module(module)
     except ImportError:
       error("module '%s' not found in package '%s'" % (module, package))
-
-me = os.path.basename(__file__)
-
-def warn(msg):
-  sys.stderr.write('%s: warning: %s\n' % (me, msg))
-
-def error(msg):
-  sys.stderr.write('%s: error: %s\n' % (me, msg))
-  sys.exit(1)
 
 class Re:
   """
