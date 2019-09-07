@@ -5,7 +5,7 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-set -eu
+set -euo pipefail
 
 # Based on https://misc.flogisoft.com/bash/tip_colors_and_formatting
 END_COLOR='\033[0m'
