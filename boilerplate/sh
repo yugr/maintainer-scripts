@@ -105,7 +105,8 @@ EOF
 # Log to $me.log
 if test "${1:-}" != __tee; then
   # Redirect to tee
-  exec "$0" __tee 2>&1 | tee $(basename $0).log
+  (exec "$0" __tee 2>&1; rc=$?) | tee $(basename $0).log
+  exit $rc
 fi
 
 me=$(basename $0)
