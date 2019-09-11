@@ -137,6 +137,7 @@ while(<>) {
     # Strip non-reg attrs
     $attr =~ s/ mem:[^\s]+//g;
     $attr =~ s/ dbg:.*//;
+    $attr =~ s/ (LD|ST)[0-9]+[^\s]+//g;
     $attr =~ s/^\s+|\s+$//;
 
     print "Split '$text' to\n  $mnemonic\n  $attr\n" if $v > 1;
