@@ -83,6 +83,35 @@ get_the_match() {
   esac
 }
 
+# Splits string to pieces and assigns them to shell variables.
+# Run like `read_str ';' '1;2;3' x y z'.
+read_str() {
+  local OIFS="$IFS"
+  IFS="$1"
+  local str="$2"
+  shift 2
+  local read_str_piece
+  for read_str_piece in $str; do
+    eval "$1='$read_str_piece'"
+    shift
+  done
+  IFS="$OIFS"
+}
+
+# Wait until all processes have completed
+wait_pids() {
+  local failed=
+  for p in $@; do
+    if ! wait $p; then
+      echo >&2 "wait_pids: process $p failed"
+      failed=1
+    fi
+  done
+  if test -n "$failed"; then
+    return 1
+  fi
+}
+
 usage() {
   cat <<EOF
 Usage: $(basename $0) [OPT]... ARG
