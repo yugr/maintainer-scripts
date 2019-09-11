@@ -5,6 +5,16 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
+# Log to $me.log
+if test "${1:-}" = __tee; then
+  shift
+else
+  export rc=$(mktemp)
+  trap "rm -f $rc" EXIT
+  (set +e; exec "$0" __tee "$@" 2>&1; echo $? > $rc) | tee $(basename $0).log
+  exit $(cat $rc)
+fi
+
 set -euo pipefail
 
 # Based on https://misc.flogisoft.com/bash/tip_colors_and_formatting
@@ -102,13 +112,6 @@ EOF
   exit 1
 }
 
-# Log to $me.log
-if test "${1:-}" != __tee; then
-  # Redirect to tee
-  (exec "$0" __tee 2>&1; rc=$?) | tee $(basename $0).log
-  exit $rc
-fi
-
 me=$(basename $0)
 
 ARGS=$(getopt -o 'p:m:fhvx' --long 'param:,multi:,flag,verbose,help' -n "$(basename $0)" -- "$@")
@@ -161,3 +164,11 @@ test $# -gt 0 || usage_short
 
 TMP=$(mktemp -d)
 trap "rm -rf $TMP" EXIT
+
+OIFS="$IFS"
+IFS=$'\n'
+for f in $(find); do
+  :
+done
+IFS="$OIFS"
+
