@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+# Copyright 2019 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# A simple script for extracting critical path from LLVM MachineScheduler's dump.
+
+use strict;
+use warnings;
+
+my $su;
+my $depth;
+my $height;
+my @su_max;
+my $cpm_max = 0;
+while(<>) {
+  s/[\r\n]*//g;
+  if(/^(SU\([0-9]+\).*)/) {
+    if(defined $su) {
+     (defined $depth or defined $height) or die "Depth or height for $su not found";
+      my $cpm = $depth + $height;
+      print "$su:\n  depth $depth\n  CPM $cpm\n";
+      if($cpm > $cpm_max) {
+        $cpm_max = $cpm;
+        @su_max = ([$su, $depth]);
+      } elsif($cpm == $cpm_max) {
+        push @su_max, [$su, $depth];
+      }
+      $depth = $height = undef;
+    }
+    $su = $1;
+    
+  } elsif(/^ *Depth *: *([0-9]+)$/) {
+    $depth = $1;
+  } elsif(/^ *Height *: *([0-9]+)$/) {
+    $height = $1;
+  }
+}
+
+print "Max $cpm_max:\n";
+for (@su_max) {
+  my $su = $_->[0];
+  my $depth = $_->[1];
+  print "  $depth: $su\n";
+}
+
