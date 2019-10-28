@@ -9,10 +9,10 @@
 if test "${1:-}" = __tee; then
   shift
 else
-  export rc=$(mktemp)
-  trap "rm -f $rc" EXIT
-  (set +e; exec "$0" __tee "$@" 2>&1; echo $? > $rc) | tee $(basename $0).log
-  exit $(cat $rc)
+  export _rc=$(mktemp)
+  trap "rm -f $_rc" EXIT
+  (set +e; exec "$0" __tee "$@" 2>&1; echo $? > $_rc) | tee $(basename $0).log
+  exit $(cat $_rc)
 fi
 
 set -euo pipefail
