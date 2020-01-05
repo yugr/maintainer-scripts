@@ -1,3 +1,4 @@
+# Remove useless Pylint warnings. Run as `pylint --rcfile=path/to/pylintrc'.
 [MASTER]
 
 # Run in parallel by default
@@ -19,4 +20,5 @@ disable=bad-continuation,
   too-many-lines,
   missing-docstring,
   misplaced-comparison-constant,
-  global-statement
+  global-statement,
+  unused-wildcard-import
