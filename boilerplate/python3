@@ -93,17 +93,44 @@ class Re:
   def groups(self, *args, **kwargs):
     return self._last_match.groups(*args, **kwargs)
 
-def run(args, **kwargs):
-  """A dummy wrapper to avoid deadlocks with subprocess.PIPE."""
-  if 'abort_on_error' in kwargs:
-    abort_on_error = kwargs['abort_on_error']
-    del kwargs['abort_on_error']
+def run(cmd, **kwargs):
+  """
+  Simple wrapper for subprocess.
+  """
+  if 'fatal' in kwargs:
+    fatal = kwargs['fatal']
+    del kwargs['fatal']
   else:
-    abort_on_error = False
+    fatal = False
+  if isinstance(cmd, str):
+    cmd = cmd.split(' ')
+#  print(cmd)
+  p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, **kwargs)
+  out, err = p.communicate()
+  out = out.decode()
+  err = err.decode()
+  if fatal and p.returncode != 0:
+    error("'%s' failed:\n%s%s" % (' '.join(cmd), out, err))
+  return p.returncode, out, err
+
+def run_no_deadlocks(cmd, **kwargs):
+  """
+  A simple wrapper for subprocess to avoid deadlocks
+  with subprocess.PIPE.
+  """
+  if 'fatal' in kwargs:
+    fatal = kwargs['fatal']
+    del kwargs['fatal']
+  else:
+    fatal = False
+  if isinstance(cmd, str):
+    cmd = cmd.split(' ')
+#  print(cmd)
   out_file = tempfile.mktemp()
   err_file = tempfile.mktemp()
   with open(out_file, 'w') as out_fileno, open(err_file, 'w') as err_fileno:
-    p = subprocess.Popen(args, stdout=out_fileno, stderr=err_fileno, **kwargs)
+    p = subprocess.Popen(cmd, stdout=out_fileno, stderr=err_fileno, **kwargs)
     p.communicate()
   with open(out_file, 'r') as f:
     out = f.read()
@@ -111,9 +138,9 @@ def run(args, **kwargs):
   with open(err_file, 'r') as f:
     err = f.read()
   os.unlink(err_file)
-  if p.returncode != 0 and abort_on_error:
-    error("subprocess failed: %s\nStdout:\n%s\nStderr:\n%s" % (" ".join(args), out, err))
-  return p, out, err
+  if fatal and p.returncode != 0:
+    error("'%s' failed:\n%s%s" % (' '.join(cmd), out, err))
+  return p.returncode, out, err
 
 def main():
   parser = argparse.ArgumentParser(description="Describe script here.",
