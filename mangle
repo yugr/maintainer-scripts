@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Copyright 2020 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# Mangle function prototype (primitive types only).
+
+set -euo pipefail
+
+if test $# = 0; then
+  proto=$(cat | tr -d '\n')
+else
+  proto=$(echo "$@")
+fi
+
+proto=$(echo "$proto" | sed '/^[ 	]*$/d; $s/[; 	]*$/{}/')
+
+# Predefine std types
+proto="
+#define uchar unsigned char
+#define ushort unsigned short
+#define uint unsigned
+$proto"
+
+tmp=$(mktemp --suffix .cpp)
+trap "rm -f $tmp" EXIT
+echo "$proto" > $tmp
+
+g++ $tmp -S -o- | grep '^_Z.*:$' | tr -d ':'

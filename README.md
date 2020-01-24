@@ -14,6 +14,7 @@ for typical toolchain/distro maintenance tasks:
 * `llvm-classify-error`: print short summary of LLVM error log
 * `llvm-print-fatpoints`: print fatpoints from LLVM MIR dump
 * `llvm-print-crit-path`: print critical path from based on MachineScheduler's dump
+* `mangle`: mangle function prototype (primitive types only)
 * `git-all`: run Git command in all repos in current folder
 * `git-bareize` : convert normal git repo to bare format
 * `gnu-compare-projects`: compare ChangeLogs of two OSS projects
