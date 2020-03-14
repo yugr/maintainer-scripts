@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2017-2019 Yury Gribov
+# Copyright 2017-2020 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -37,7 +37,7 @@ def ensure_module(module, package=None, user=True, quiet=False):
     ensure_module('configparser')
     ensure_module('wx', 'wxPython')
   """
-  import imp, site
+  import imp, site, subprocess
   try:
     imp.find_module(module)
   except ImportError:
