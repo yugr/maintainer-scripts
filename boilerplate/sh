@@ -196,7 +196,8 @@ TMP=$(mktemp -d)
 trap "rm -rf $TMP" EXIT
 
 OIFS="$IFS"
-IFS=$'\n'
+IFS='
+'
 for f in $(find); do
   :
 done
