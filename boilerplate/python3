@@ -31,6 +31,14 @@ def error(msg):
   sys.stderr.write('%s: error: %s\n' % (me, msg))
   sys.exit(1)
 
+def warn_if(cond, msg):
+  if cond:
+    warn(msg)
+
+def error_if(cond, msg):
+  if cond:
+    error(msg)
+
 def ensure_module(module, package=None, user=True, quiet=False):
   """
   Installs module if it's missing. Call like
