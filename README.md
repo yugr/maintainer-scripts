@@ -17,6 +17,7 @@ for typical toolchain/distro maintenance tasks:
 * `mangle`: mangle function prototype (primitive types only)
 * `git-all`: run Git command in all repos in current folder
 * `git-bareize` : convert normal git repo to bare format
+* `git-reset-dates`: change date of last N commits
 * `gnu-compare-projects`: compare ChangeLogs of two OSS projects
 * `insert-license-header`: insert license header into all files in a folder
 * `py-lint`: wrapper around `pylint` to make it more usable
