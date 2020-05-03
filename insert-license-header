@@ -1,9 +1,11 @@
 #!/bin/sh
 
-# Copyright 2016-2018 Yury Gribov
+# Copyright 2016-2020 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
+
+# Insert license headers to all files in codebase.
 
 set -eu
 

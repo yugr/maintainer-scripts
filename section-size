@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Copyright 2018-2020 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# Compute section size.
+
 set -e
 
 if test -z "$1" || test -z "$2"; then

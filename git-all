@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Copyright 2018-2020 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# Execute git command for all repos in current dir.
+
 set -eu
 
 print_help_and_exit() {

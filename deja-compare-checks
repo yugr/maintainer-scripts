@@ -1,9 +1,11 @@
 #!/bin/sh
 
-# Copyright 2015-2017 Yury Gribov
+# Copyright 2015-2020 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
+
+# Compare Dejagnu test results.
 
 set -e
 
