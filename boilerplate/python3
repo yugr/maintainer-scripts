@@ -151,29 +151,30 @@ def run_no_deadlocks(cmd, **kwargs):
   return p.returncode, out, err
 
 def main():
-  parser = argparse.ArgumentParser(description="Describe script here.",
-                                   formatter_class=argparse.RawDescriptionHelpFormatter,
+  class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
+  parser = argparse.ArgumentParser(description="Describe script here",
+                                   formatter_class=Formatter,
                                    epilog="""\
 Examples:
   $ python {0} arg
 """.format(me))
   parser.add_argument('--flag', '-f',
-                      help="Describe flag here.",
+                      help="Describe flag here",
                       dest='flag', action='store_true', default=False)
   parser.add_argument('--no-flag',
-                      help="Inverse of --flag.",
+                      help="Inverse of --flag",
                       dest='flag', action='store_false')
   parser.add_argument('--param', '-p',
-                      help="Describe scalar parameter here.",
+                      help="Describe scalar parameter here",
                       default='0')
   parser.add_argument('--multi', '-m',
-                      help="Describe array parameter here (can be specified more than once).",
+                      help="Describe array parameter here (can be specified more than once)",
                       action='append')
   parser.add_argument('--verbose', '-v',
-                      help="Print diagnostic info (can be specified more than once).",
+                      help="Print diagnostic info (can be specified more than once)",
                       action='count', default=0)
   parser.add_argument('arg',
-                      help="First positional argument.", metavar='ARG')
+                      help="First positional argument", metavar='ARG')
   parser.add_argument('rest',
                       nargs=argparse.REMAINDER, default=[])
 
