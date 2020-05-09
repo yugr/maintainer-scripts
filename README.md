@@ -7,8 +7,8 @@ for typical toolchain/distro maintenance tasks:
 * `gcc-build`, `llvm-build`: build compilers
 * `gcc-bootstrap-and-regtest`: test a single GCC change (builds compiler, runs testsuite and compares results)
 * `gcc-bisect`: bisect GCC regression
-* `gcc-index`: set up ctags for GCC source dir
-* `gcc-debug`: run GCC compiler proper under debugger
+* `gcc-index`: set up ctags for GCC source dir (avoiding irrelevant subdirs and respecting supermacro)
+* `gcc-debug`: debug GCC compiler proper instead of driver
 * `gcc-predefs`: print predefined GCC macros
 * `llvm-collect-logs`, `llvm-splitlog`: generate Clang debug logs
 * `llvm-classify-error`: print short summary of LLVM error log
