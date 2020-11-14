@@ -12,7 +12,7 @@ set -eu
 ME=$(basename $0)
 TMP=${TMPDIR:-/tmp}/$ME.$$
 
-trap "rm -f $TMP*" EXIT
+trap "rm -f $TMP*" EXIT INT TERM
 
 absolutize() {
   test -e "$1"

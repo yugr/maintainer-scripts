@@ -74,7 +74,7 @@ fi
 
 TMP=$(mktemp -d --suffix=git-all.$$)
 if test -z "$KEEP"; then
-  trap "rm -rf $TMP" EXIT
+  trap "rm -rf $TMP" EXIT INT TERM
 else
   echo "Temp files will be stored in $TMP"
 fi

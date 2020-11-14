@@ -20,7 +20,7 @@ for d in $(find -name \*.py  | xargs dirname | sort -u); do
     files="$files $PWD/$d/__init__.py"
   fi
 done
-trap "rm -f $files" EXIT
+trap "rm -f $files" EXIT INT TERM
 
 name=$(basename $PWD)
 

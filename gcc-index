@@ -39,7 +39,7 @@ ctags --c++-kinds=+p --fields=+iaS --extra=+q -a -I GTY+,ATTRIBUTE_UNUSED -L csc
 # Now manually merge contents of .def files
 TMP=mktemp
 rm -f $TMP
-trap "rm -f $TMP" EXIT
+trap "rm -f $TMP" EXIT INT TERM
 for def in \
     'gcc/tree.def DEFTREECODE' \
     'gcc/gimple.def DEFGSCODE' \

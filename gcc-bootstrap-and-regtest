@@ -251,7 +251,7 @@ else
   fi
 fi
 
-trap "echo 'Encountered error, killing children...'; killkids" EXIT
+trap "echo 'Encountered error, killing children...'; killkids" EXIT INT TERM
 
 echo 'Configuring...'
 gcc_configure $SRC $BUILD > $OUT/configure-orig.log 2>&1 &
@@ -286,4 +286,4 @@ wait %1
 gcc_compare $SRC $BUILD $BUILD_P | tee $OUT/compare.log
 toc checking
 
-trap '' EXIT
+trap '' EXIT INT TERM

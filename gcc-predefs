@@ -18,6 +18,6 @@ if test $# -gt 0; then
 fi
 
 TMP=$(mktemp --suffix=.h)
-trap "rm -f $TMP" EXIT
+trap "rm -f $TMP" EXIT INT TERM
 
 $CC "$@" -E -dM $TMP

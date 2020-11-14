@@ -10,7 +10,7 @@ if test "${1:-}" = __tee; then
   shift
 else
   export _rc=$(mktemp)
-  trap "rm -f $_rc" EXIT
+  trap "rm -f $_rc" EXIT INT TERM
   (set +e; exec "$0" __tee "$@" 2>&1; echo $? > $_rc) | tee $(basename $0).log
   exit $(cat $_rc)
 fi
@@ -193,7 +193,7 @@ done
 test $# -gt 0 || usage_short
 
 TMP=$(mktemp -d)
-trap "rm -rf $TMP" EXIT
+trap "rm -rf $TMP" EXIT INT TERM
 
 OIFS="$IFS"
 IFS='

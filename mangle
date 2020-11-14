@@ -26,7 +26,7 @@ proto="
 $proto"
 
 tmp=$(mktemp --suffix .cpp)
-trap "rm -f $tmp" EXIT
+trap "rm -f $tmp" EXIT INT TERM
 echo "$proto" > $tmp
 
 g++ $tmp -S -o- | grep '^_Z.*:$' | tr -d ':'

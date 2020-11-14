@@ -48,7 +48,7 @@ if ! test -d $SRCDIR/gmp; then
   find -L gmp mpc mpfr isl | xargs touch -r .
 fi
 
-trap "rm -rf $BUILDDIR" EXIT
+trap "rm -rf $BUILDDIR" EXIT INT TERM
 mkdir -p $BUILDDIR
 rm -rf $BUILDDIR/*
 gcc-build -C $BUILDDIR --no-libs $SRCDIR --enable-languages=c CFLAGS=-O0 CXXFLAGS=-O0 || exit 125
