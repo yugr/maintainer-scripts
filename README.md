@@ -10,6 +10,7 @@ for typical toolchain/distro maintenance tasks:
 * `gcc-index`: set up ctags for GCC source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `gcc-debug`: debug GCC compiler proper instead of driver
 * `gcc-predefs`: print predefined GCC macros
+* `lddr`: recursively applies ldd to all files in folder (and its subfolders)
 * `llvm-collect-logs`, `llvm-splitlog`: generate Clang debug logs
 * `llvm-classify-error`: print short summary of LLVM error log
 * `llvm-print-fatpoints`: print fatpoints from LLVM MIR dump
