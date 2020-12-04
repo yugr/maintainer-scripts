@@ -60,7 +60,6 @@ sub usage_short($) {
   my $me = basename($0);
   print STDERR <<EOF;
 $_[0]
-No inputs specified.
 Usage: $me [OPT]... ROOT...
 Run `$me -h' for more details.
 EOF
