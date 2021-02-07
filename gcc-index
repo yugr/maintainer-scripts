@@ -27,6 +27,7 @@ else
   BUILD=$HOME/build/$(basename $(pwd))
 fi
 
+# TODO: allow running this from build dir to avoid relying on dir layout?
 if test -f "$BUILD/gcc/options.h"; then
   find $BUILD/gcc -name \*.h -o -name \*.c -print >> cscope.files
 else
@@ -55,4 +56,4 @@ cat tags >> $TMP
 LC_COLLATE=C sort $TMP > tags
 
 #echo 'Building cscope database...'
-#cscope -Igcc -Iinclude -q -R -b -i cscope.files
+cscope -Igcc -Iinclude -q -R -b -i cscope.files
