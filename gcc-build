@@ -7,7 +7,7 @@
 
 # Configure and build GCC in current directory.
 
-set -e
+set -eu
 
 absolutize() {
   test -e "$1"

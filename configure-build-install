@@ -7,7 +7,7 @@
 
 # A simple script to automate deploy of typical OSS projects.
 
-set -e
+set -eu
 
 # TODO:
 # * .tar.gz inputs

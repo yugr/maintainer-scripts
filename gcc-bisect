@@ -25,7 +25,8 @@
 # - test
 # - parametrize
 
-set -eux
+set -eu
+set -x
 
 me=$(basename $0)
 

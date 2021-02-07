@@ -7,7 +7,7 @@
 
 # Compare Dejagnu test results.
 
-set -e
+set -eu
 
 absolutize() {
   test -e "$1"

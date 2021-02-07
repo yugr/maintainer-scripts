@@ -7,7 +7,7 @@
 
 # Compute section size.
 
-set -e
+set -eu
 
 if test -z "$1" || test -z "$2"; then
   cat <<EOF

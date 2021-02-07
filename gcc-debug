@@ -11,7 +11,7 @@
 # An example of typical usage:
 # $ gcc-debug -ex 'b generic-match.c:2564' xgcc -Bgcc repro.c
 
-set -e
+set -eu
 
 GDBFLAGS=
 #GDBFLAGS='-tui'

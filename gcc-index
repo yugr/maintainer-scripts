@@ -8,7 +8,7 @@
 # Indexes GCC source code with ctags, respecting the supermacro
 # and avoiding irrelevant files.
 
-set -e
+set -eu
 
 if [ ! -f gcc/gimple.c ]; then
 	echo 'You must run me from GCC root directory' >&2

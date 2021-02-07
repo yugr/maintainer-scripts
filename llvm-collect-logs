@@ -11,7 +11,7 @@
 # or
 #   $ llvm-collect-logs -o logs-new clang ...
 
-set -eux
+set -eu
 
 if test "${1:-}" = -o; then
   O=$2
