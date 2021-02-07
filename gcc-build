@@ -60,7 +60,7 @@ if test -z "${CFGFLAGS:-}"; then
   CFGFLAGS=
 fi
 
-BUILD_DIR=$(pwd)
+BUILD_DIR=$PWD
 CLEAN=
 INSTALL=
 GOAL=
@@ -166,7 +166,7 @@ fi
 TARGET=$(gcc -v 2>&1 | grep Target | awk '{print $2}')
 HOST=$TARGET
 
-INSTALL_DIR=$HOME/install/$(basename $(pwd))
+INSTALL_DIR=$HOME/install/$(basename $PWD)
 
 TIME_START=$(date +%s)
 

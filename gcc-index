@@ -24,7 +24,7 @@ find gcc libiberty libcpp \
 if test $# -ge 1; then
   BUILD=$1
 else
-  BUILD=$HOME/build/$(basename $(pwd))
+  BUILD=$HOME/build/$(basename $PWD)
 fi
 
 # TODO: allow running this from build dir to avoid relying on dir layout?
