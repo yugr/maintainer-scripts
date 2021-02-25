@@ -1,4 +1,4 @@
-// Copyright 2019 Yury Gribov
+// Copyright 2019-2021 Yury Gribov
 // 
 // Use of this source code is governed by MIT license that can be
 // found in the LICENSE.txt file.
@@ -7,7 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-__attribute__((noinline))
+#ifdef __clang__
+__attribute__((optnone))
+#else
+__attribute__((noipa))
+#endif
 void foo() {
 }
 
