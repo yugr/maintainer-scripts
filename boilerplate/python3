@@ -110,6 +110,11 @@ def run(cmd, **kwargs):
     del kwargs['fatal']
   else:
     fatal = False
+  if 'tee' in kwargs:
+    tee = kwargs['tee']
+    del kwargs['tee']
+  else:
+    tee = False
   if isinstance(cmd, str):
     cmd = cmd.split(' ')
 #  print(cmd)
@@ -120,6 +125,9 @@ def run(cmd, **kwargs):
   err = err.decode()
   if fatal and p.returncode != 0:
     error("'%s' failed:\n%s%s" % (' '.join(cmd), out, err))
+  if tee:
+    sys.stdout.write(out)
+    sys.stderr.write(err)
   return p.returncode, out, err
 
 def run_no_deadlocks(cmd, **kwargs):
