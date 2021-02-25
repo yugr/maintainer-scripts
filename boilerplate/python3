@@ -1,20 +1,20 @@
 #!/usr/bin/python3
 
-# Copyright 2017-2020 Yury Gribov
+# Copyright 2017-2021 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 #
 # Shortly describe script here.
 
-import sys
+import argparse
+import atexit
 import os
 import os.path
 import re
 import subprocess
-import argparse
+import sys
 import tempfile
-import atexit
 
 me = os.path.basename(__file__)
 
