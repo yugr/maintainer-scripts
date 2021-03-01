@@ -177,7 +177,7 @@ Examples:
                       default='0')
   parser.add_argument('--multi', '-m',
                       help="Describe array parameter here (can be specified more than once)",
-                      action='append')
+                      action='append', default=[])
   parser.add_argument('--verbose', '-v',
                       help="Print diagnostic info (can be specified more than once)",
                       action='count', default=0)
