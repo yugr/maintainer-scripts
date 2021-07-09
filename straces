@@ -1,0 +1,2 @@
+#!/bin/sh
+strace -ff -s1024 "$@" 2>&1 | ${EDITOR:-vim} -

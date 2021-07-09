@@ -1,0 +1,2 @@
+#!/bin/sh
+find "${1:-$PWD}" | xargs touch -r "${1:-$PWD}"
