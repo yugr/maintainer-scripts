@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2019-2020 Yury Gribov
+# Copyright 2019-2021 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -16,7 +16,7 @@ if test $# = 0; then
   exit 1
 fi
 
-for REPO in "$@"; do
+for REPO; do
   REPO=$(echo "$REPO" | sed 's![\/\\]*$!!')
 
   if ! test -d "$REPO"; then

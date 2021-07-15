@@ -102,7 +102,7 @@ read_str() {
 # Wait until all processes have completed
 wait_pids() {
   local failed=
-  for p in $@; do
+  for p; do
     if ! wait $p; then
       echo >&2 "wait_pids: process $p failed"
       failed=1

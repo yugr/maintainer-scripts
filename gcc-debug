@@ -18,7 +18,7 @@ GDBFLAGS=
 GCC=
 
 NFLAGS=0
-for arg in "$@"; do
+for arg; do
 	if test -z "$GCC" && which "$arg" > /dev/null 2>&1; then
 		shift $NFLAGS
 		break
