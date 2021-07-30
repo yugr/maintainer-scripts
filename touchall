@@ -1,2 +1,12 @@
 #!/bin/sh
+
+# Copyright 2021 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# Unify times of all files in folder.
+
+set -eu
+
 find "${1:-$PWD}" | xargs touch -r "${1:-$PWD}"
