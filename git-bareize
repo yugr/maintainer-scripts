@@ -29,7 +29,7 @@ for REPO; do
     exit 1
   fi
 
-  if (cd "$REPO" && git status) 2>&1 | grep -q 'nothing to commit, working tree clean'; then
+  if ! (cd "$REPO" && git status) 2>&1 | grep -q 'nothing to commit, working tree clean'; then
     echo >&2 "Cowardly refusing to remove uncommitted changes in $REPO"
     exit 1
   fi
@@ -37,7 +37,8 @@ for REPO; do
   rm -rf "$REPO.git"
   mv "$REPO"/.git "$REPO.git"
   git --git-dir="$REPO.git" config --bool core.bare true
-  rm -rf "$REPO"
+  rm -rf "$REPO" "$REPO.git"/{index,ORIG_HEAD}
+  echo 'ref: refs/heads/master' > "$REPO.git"/HEAD
 
   echo "Successfully converted $REPO"
 done
