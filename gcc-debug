@@ -35,7 +35,7 @@ fi
 GCC="$1"
 shift
 
-CMD=$($GCC -### "$@" 2>&1 | fgrep cc1 | tail -1 | sed -e 's/\"//g')
+CMD=$($GCC -### "$@" 2>&1 | grep '\(cc1\|cc1plus\|f951\|lto1\) ' | tail -1 | sed -e 's/\"//g')
 CC=$(echo "$CMD" | awk '{print $1}')
 if ! test -x "$CC"; then
 	echo >&2 "Failed to find compiler proper"
