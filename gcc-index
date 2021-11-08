@@ -11,8 +11,8 @@
 set -eu
 
 if [ ! -f gcc/gimple.c ]; then
-	echo 'You must run me from GCC root directory' >&2
-	exit 1
+  echo 'You must run me from GCC root directory' >&2
+  exit 1
 fi
 
 rm -f cscope.* ctags tags
@@ -45,8 +45,8 @@ for def in \
     'gcc/tree.def DEFTREECODE' \
     'gcc/gimple.def DEFGSCODE' \
     'gcc/rtl.def DEF_RTL_EXPR' \
-    'gcc/internal-fn.def DEF_INTERNAL_FN' \
-    'gcc/params.def DEFPARAM'; do
+    'gcc/builtins.def DEF[A-Z0-9_]*_BUILTIN' \
+    'gcc/internal-fn.def DEF_INTERNAL[A-Z0-9_]*_FN'; do
   file=${def% *}
   macro=${def#* }
   cat $file | sed -ne "s!^\($macro *(\([^,]*\)\).*\$!\2	$file	/\1,/!p" >> $TMP
@@ -56,4 +56,6 @@ cat tags >> $TMP
 LC_COLLATE=C sort $TMP > tags
 
 #echo 'Building cscope database...'
-cscope -Igcc -Iinclude -q -R -b -i cscope.files
+if which cscope 2>/dev/null 2>&1; then
+  cscope -Igcc -Iinclude -q -R -b -i cscope.files
+fi
