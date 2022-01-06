@@ -11,6 +11,7 @@ for typical toolchain/distro maintenance tasks:
 * `gcc-index`: set up ctags for GCC source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `gcc-debug`: debug GCC compiler proper instead of driver
 * `gcc-predefs`: print predefined GCC macros
+* `gcov-tool-many`: apply `gcov-tool` to more than 2 files
 * `git-all`: run Git command in all repos in current folder
 * `git-bareize` : convert normal git repo to bare format
 * `git-reset-dates`: change date of last N commits

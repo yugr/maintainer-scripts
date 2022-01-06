@@ -1,0 +1,145 @@
+#!/bin/sh
+
+# Copyright 2022 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+set -eu
+set -x
+
+error() {
+  prefix="error:"
+  if test -t 2; then
+    prefix="${RED}${prefix}${END_COLOR}"
+  fi
+  printf "$(basename $0): $prefix $@\\n" >&2
+  exit 1
+}
+
+warn() {
+  prefix="warning:"
+  if test -t 2; then
+    prefix="${RED}${prefix}${END_COLOR}"
+  fi
+  printf "$(basename $0): $prefix $@\\n" >&2
+}
+
+mkcleandir() {
+  mkdir -p "$1"
+  rm -rf "$1"/*
+}
+
+usage() {
+  cat <<EOF
+Usage: $(basename $0) ACTION [OPT]... DIR1 DIR2...
+Gcov-tool wrapper which supports arbitrary number of profiles.
+Only 'merge' ACTION is supported for now.
+
+DESCRIPTION
+       gcov-tool is an offline tool to process gcc's gcda profile files.
+
+Options:
+  --output DIR, -o DIR   Store results in DIR instead of default.
+  --verbose, -v          Print diagnostic info.
+  --weights w1,w2,...
+  -w w1,w2,...           Weights for profiles.
+
+Examples:
+  \$ $(basename $0) merge coverage.*
+EOF
+  exit
+}
+
+usage_short() {
+  cat >&2 <<EOF
+Usage: $(basename $0) ACTION [OPT]... DIR1 DIR2...
+Run \`$(basename $0) -h' for more details.
+EOF
+  exit 1
+}
+
+me=$(basename $0)
+
+gcov_merge() {
+  ARGS=$(getopt -o 'o:w:hv' --long 'output:,weight:,verbose,help' -n "$(basename $0)" -- "$@")
+  eval set -- "$ARGS"
+
+  W=
+  O=merged_profile
+  V=0
+  GCOV_ARGS=
+
+  while true; do
+    case "$1" in
+      -o | --output)
+        O="$2"
+        shift 2
+        ;;
+      -w | --weight)
+        W="$2"
+        shift 2
+        ;;
+      -h | --help)
+        usage
+        GCOV_ARGS="$GCOV_ARGS $1"
+        ;;
+      -v | --verbose)
+        V=$((V + 1))
+        GCOV_ARGS="$GCOV_ARGS $1"
+        shift
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        error "unknown option: $1"
+        ;;
+      *)
+        error 'internal error'
+        ;;
+    esac
+  done
+
+  test $# -gt 0 || usage_short
+
+  TMP=$(mktemp -d)
+  trap "rm -rf $TMP" EXIT INT TERM
+#  TMP=$(dirname $1)
+
+  cp -r "$1" $TMP/1
+  shift
+
+  w1=${W%%,*}
+  W=${W#*,}
+
+  for i in $(seq 1 $#); do
+    args=
+    if test "$w1"; then
+      w2=${W%%,*}
+      args="-w $w1,$w2"
+      w1=$w2
+      W=${W#*,}
+    fi
+    last=$TMP/$((i + 1))
+    gcov-tool merge $GCOV_ARGS $args -o $last $TMP/$i "$1"
+    shift
+  done
+
+  rm -rf $O
+  mv $last $O
+}
+
+action=$1
+shift
+
+case $action in
+  merge)
+    gcov_merge "$@"
+    ;;
+  *)
+    echo >&2 "$me: action '$action' not implemented"
+    exit 1
+    ;;
+esac
