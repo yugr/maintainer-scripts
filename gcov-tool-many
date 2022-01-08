@@ -6,7 +6,6 @@
 # found in the LICENSE.txt file.
 
 set -eu
-set -x
 
 error() {
   prefix="error:"
