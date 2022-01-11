@@ -172,10 +172,10 @@ Examples:
   parser.add_argument('--no-flag',
                       help="Inverse of --flag",
                       dest='flag', action='store_false')
-  parser.add_argument('--param', '-p',
+  parser.add_argument('--param', '-p', metavar='PARAM_NAME',
                       help="Describe scalar parameter here",
                       default='0')
-  parser.add_argument('--multi', '-m',
+  parser.add_argument('--multi', '-m', metavar='MULTI_PARAM_NAME',
                       help="Describe array parameter here (can be specified more than once)",
                       action='append', default=[])
   parser.add_argument('--verbose', '-v',
