@@ -24,6 +24,7 @@ for typical toolchain/distro maintenance tasks:
 * `llvm-print-crit-path`: print critical path from based on MachineScheduler's dump
 * `mangle`: mangle function prototype (primitive types only)
 * `py-lint`: wrapper around `pylint` to make it more usable
+* `plot-percentiles`: a simple pyplot-based script which plots percentile-based benchmark summaries
 * `straces`: open straces of all child processes in editor
 * `touchall`: unify times of all files in folder
 * `update-copyrights`: update copyright comments in all files in a folder

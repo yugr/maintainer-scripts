@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+# Copyright 2022 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# A simple pyplot-based script which plots percentile-based benchmark summaries.
+# Inspired by https://developers.redhat.com/blog/2016/03/11/practical-micro-benchmarking-with-ltrace-and-sched
+
+import sys
+import os.path
+import matplotlib.pyplot as plt
+
+me = os.path.basename(__file__)
+
+# TODO: distinguish single run and series of runs
+class Bench:
+  def __init__(self, name, files):
+    self.name = name
+    self.files = files
+    self.data = []
+
+def usage():
+  # TODO
+  print('''\
+%s [OPT]... --axis=NAME FILE [FILE...] --axis=NAME FILE [FILE...] --axis=NAME ...
+Print percentiles of groups of benchmark runs of measurements on single multi-axis plot.
+
+Options:
+  --axis=NAME      Adds new axis to the plot; followup FILEs
+                   will be plotted on this axis.
+  --ylabel LAB     Specifies Y-axis label on plots.
+  --delim D, -d D  Specifies delimeter for values in files (default is newline).
+
+Example:
+  In the following run
+    %s --axis=O2 trunk_O2_times.txt branch_O2_times.txt \
+         --axis=O3 trunk_O3_times.txt branch_O3_times.txt
+  we display 2 plots (O2 and O3) comparing trunk against PR branch.
+
+  A typical way to generate the times.txt files would be
+    $ rm -f *_O[23].log
+    $ for ver in trunk branch; do
+      for opt in O2 O3; do
+      for i in `seq 1 100`; do
+        \time -apo ${ver}_${opt}.log ~/src/$ver-$opt/prog
+      done; done; done
+    $ for ver in trunk branch; do
+      for opt in O2 O3; do
+        cat ${ver}_${opt}.log | awk '/user/{print $2}' > ${ver}_${opt}_times.txt
+      done; done
+''' % (me, me))
+  sys.exit(0)
+
+def parse_args(args):
+  benches = []
+  ylabel = None
+
+  i = 0
+  while i < len(args):
+    arg = args[i]
+    is_last_arg = i == len(args) - 1
+    if arg == '--help':
+      usage()
+    elif arg == '--ylabel' and not is_last_arg:
+      ylabel = args[i + 1]
+      i += 2
+    elif arg == '--axis' and not is_last_arg:
+      name = args[i + 1]
+      i += 2
+      # Read all files following an --axis argument
+      files = []
+      while i < len(args):
+        if args[i].startswith('-'):
+          break
+        files.append(args[i])
+        i += 1
+      benches.append(Bench(name, files))
+    else:
+      sys.stderr.write(f"{me}: unexpected parameter '{arg}'\n")
+      sys.exit(1)
+
+  return ylabel, benches
+
+ylabel, benches = parse_args(sys.argv[1:])
+
+# Read data
+
+for bench in benches:
+  for file in bench.files:
+    bench.data.append([])
+    with open(file, 'r') as f:
+      for line in f:
+        bench.data[-1].append(float(line))
+    # Build percentiles
+    n = len(bench.data[-1])
+    bench.data[-1] = [0] + [100.0 * (i + 1) / n for i in range(n)], \
+                     [0] + sorted(bench.data[-1])
+
+# Plot data
+
+fig, axes = plt.subplots(len(benches))
+
+# Silly pyplot returns scalar axes for len==1
+try:
+    iter(axes)
+except TypeError:
+    axes = [axes]
+
+for bench, axis in zip(benches, axes):
+  axis.set_title(bench.name)
+  if ylabel is not None:
+    axis.set_ylabel(ylabel)
+  axis.set_xlim((0, 100))
+  for file, (x, y) in zip(bench.files, bench.data):
+    axis.plot(x, y, label=os.path.basename(file))
+  axis.legend()
+
+plt.show()
