@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2021 Yury Gribov
+# Copyright 2015-2022 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -127,7 +127,7 @@ if [ $(ls | wc -l) -gt 0 ]; then
     error 'Build must be performed in empty directory; do `rm -rf *` or run with --clean'
   else
     # Be cautious
-    test -f ./LLVMBuild.cmake \
+    test -f ./CMakeCache.txt \
       || error 'cowardly refusing to clean directory which does not look like a build dir'
     rm -rf *
   fi
