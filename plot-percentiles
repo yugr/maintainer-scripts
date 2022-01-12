@@ -35,8 +35,9 @@ Options:
 
 Example:
   In the following run
-    %s --axis=O2 trunk_O2_times.txt branch_O2_times.txt \
-         --axis=O3 trunk_O3_times.txt branch_O3_times.txt
+    %s --ylabel 'Time, sec.' \
+       --axis=O2 trunk_O2_times.txt branch_O2_times.txt \
+       --axis=O3 trunk_O3_times.txt branch_O3_times.txt
   we display 2 plots (O2 and O3) comparing trunk against PR branch.
 
   A typical way to generate the times.txt files would be
