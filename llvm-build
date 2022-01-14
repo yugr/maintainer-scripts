@@ -32,26 +32,27 @@ Usage: $(basename $0) [options] src-dir [cmake-options]
 Configure and build LLVM in current directory with typical options.
 
 Options:
-  -h, --help         Print help and exit.
-  -C dir             Build in dir.
-  -j N               Number of jobs to run (default is 1.5 * number-of-cores).
-  --clean            Force clean of build directory.
-  --install          Install after build (off by default).
-  -g, --debug        Build unoptimized compiler (for debugging).
-  --external-rt      Build external compiler-rt.
-  --targets t1,...   List of targets to build (or "all"); default is x64 only.
-  --test             Run check-all after successful build.
+  -h, --help           Print help and exit.
+  -C dir               Build in dir.
+  -j N                 Number of jobs to run (default is 1.5 * number-of-cores).
+  --clean              Force clean of build directory.
+  --install            Install after build (off by default).
+  -g, --debug          Build unoptimized compiler (for debugging).
+  --external-rt        Build external compiler-rt.
+  --targets 't1;...'   List of targets to build (or "all"); default is x64 only.
+  --projects 'p1;...'  List of projects to build (or "all"); default is clang.
+  --test               Run check-all after successful build.
 
 EOF
 }
 
-NCORES=$(grep -c '^processor' /proc/cpuinfo)
-NJOBS=$((3 * NCORES / 2))
+NJOBS=$((3 * $(nproc) / 2))
 
 INSTALL_DIR=$HOME/install/$(basename $PWD)
 CMAKE_FLAGS="-DLLVM_ENABLE_ASSERTIONS=ON -DBUILD_SHARED_LIBS=ON -DLLVM_TARGETS_TO_BUILD=X86 -DCOMPILER_RT_BUILD_SHARED_ASAN=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DCMAKE_BUILD_TYPE=RelWithDebInfo"
 
 BUILD_DIR=$PWD
+PROJECTS=clang
 CLEAN=
 INSTALL=
 TEST=
@@ -79,8 +80,12 @@ while true; do
     TEST=1
     shift
     ;;
+  --projects)
+    PROJECTS="$2"
+    shift 2
+    ;;
   --targets)
-    CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_TARGETS_TO_BUILD=$2"
+    CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_TARGETS_TO_BUILD='$2'"
     shift 2
     ;;
   --external-rt)
@@ -107,6 +112,10 @@ while true; do
     ;;
   esac
 done
+
+if test -n "$PROJECTS"; then
+  CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_ENABLE_PROJECTS='$PROJECTS'"
+fi
 
 if [ $# -lt 1 ]; then
   print_short_help >&2
