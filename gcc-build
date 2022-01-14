@@ -52,8 +52,7 @@ configuration flags.
 EOF
 }
 
-NCORES=$(grep -c '^processor' /proc/cpuinfo)
-NJOBS=$((3 * NCORES / 2))
+NJOBS=$((3 * $(nproc) / 2))
 
 BOOTSTRAP='--disable-bootstrap --enable-languages=c,c++'
 if test -z "${CFGFLAGS:-}"; then

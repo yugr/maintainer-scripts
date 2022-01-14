@@ -149,7 +149,7 @@ eval set -- "$ARGS"
 CFGFLAGS=
 OUT=${TMPDIR:-/tmp}/$me-$USER-$$
 
-NJOBS=$(( $(grep -c '^processor' /proc/cpuinfo) * 3 / 2 ))
+NJOBS=$(( $(nproc) * 3 / 2 ))
 NJOBS=$((NJOBS / 2))
 if [ $NJOBS = 0 ]; then
   NJOBS=1

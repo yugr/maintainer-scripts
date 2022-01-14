@@ -104,8 +104,7 @@ if test $# = 0; then
   set -- $PWD
 fi
 
-NJOBS=$(grep -c '^processor' /proc/cpuinfo)
-NJOBS=$((NJOBS * 3 / 2))
+NJOBS=$(($(nproc) * 3 / 2))
 
 reset_opts
 
