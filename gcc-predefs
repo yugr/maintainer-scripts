@@ -9,7 +9,7 @@
 
 set -eu
 
-CC=gcc
+test -n "${CC:-}" || CC=gcc
 if test $# -gt 0; then
   if which "$1" >/dev/null 2>&1; then
     CC="$1"
