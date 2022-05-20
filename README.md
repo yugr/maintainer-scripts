@@ -1,6 +1,7 @@
 This repo contains a bunch of scripts which can be useful
 for typical toolchain/distro maintenance tasks:
 * `boilerplate/*` : boilerplate codes for various languages
+* `clang-format-all`: format files from top commit via clang-format
 * `configure-build-install`: configure, build and install a typical Autoconf project
 * `cpptags`, `pytags`: wrappers for `ctags` to generate tags for different languages
 * `deja-compare-checks`, `gcc-compare-checks`: compare two sets of Dejagnu reports

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Copyright 2022 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
+# Format files from top commit
+
+set -eu
+set -x
+
+cd $(git rev-parse --show-toplevel)
+git show | grep '^diff' | awk '{print $4}' | cut -d/ -f2- | grep '\(\.cpp\|\.cc\|\.hpp\|.h\)$' | xargs clang-format-9 -i
