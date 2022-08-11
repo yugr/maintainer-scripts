@@ -39,7 +39,7 @@ SRCDIR=$PWD
 BUILDDIR=$(mktemp -d)
 TESTDIR=$(cd $(dirname $1); pwd)
 
-if ! test -d .git -a -f gcc/gcc.c; then
+if ! test -d .git -a -f gcc/gcc.h; then
   echo >&2 "$me: must be run from GCC git repo"
   exit 1
 fi

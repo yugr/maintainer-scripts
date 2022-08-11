@@ -74,7 +74,7 @@ gcc_compare() {
 }
 
 is_gcc_dir() {
-  test -d "$1" && test -f "$1"/gcc/gcc.c
+  test -d "$1" && test -f "$1"/gcc/gcc.h
 }
 
 tic() {

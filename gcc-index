@@ -10,7 +10,7 @@
 
 set -eu
 
-if [ ! -f gcc/gimple.c ]; then
+if [ ! -f gcc/gcc.h ]; then
   echo 'You must run me from GCC root directory' >&2
   exit 1
 fi
