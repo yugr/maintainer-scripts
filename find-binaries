@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2021 Yury Gribov
+# Copyright 2021-2022 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -9,4 +9,4 @@
 
 set -eu
 
-find "$@" -type f -a ! -size 0 -print0 | xargs -0 grep -IL .
+find -L "$@" -type f -a ! -size 0 -print0 | xargs -0 grep -IL .

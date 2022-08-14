@@ -29,7 +29,7 @@ mkcleandir() {
 
 isemptydir() {
   #test $(ls -A "$1" | wc -l) = 0
-  test -d "$1" && test $(find "$1" -maxdepth 0 -empty)
+  test -d "$1" && test $(find -L "$1" -maxdepth 0 -empty)
 }
 
 P=x86_64-unknown-linux-gnu
@@ -247,7 +247,7 @@ else
     patch -d $SRC_P -p1 < $PATCH
   else
     git --git-dir=$SRC/.git archive $PATCH | tar -x -C $SRC_P
-    find $SRC_P | xargs touch -r $SRC_P
+    find -L $SRC_P | xargs touch -r $SRC_P
   fi
 fi
 

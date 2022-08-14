@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2020-2021 Yury Gribov
+# Copyright 2020-2022 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -14,7 +14,7 @@ if test $# = 0; then
 fi
 
 # libbz2.so.1.0 => /lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007fe9221d1000)
-for f in $(find "$@" -type f -a -executable); do
+for f in $(find -L "$@" -type f -a -executable); do
   if file -b $f | grep -q ELF; then
     ldd $f
   fi
