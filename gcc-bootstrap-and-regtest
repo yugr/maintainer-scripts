@@ -99,14 +99,14 @@ killtree() {
   status=0
 
   # Stop parent so that it does not respawn children
-  kill -SIGSTOP $1 || status=1
+  kill -s SIGSTOP $1 || status=1
 
   for kid in $(ps -o pid --no-headers --ppid $1); do
     killtree $kid $2 || status=1
   done
 
   # Need to continue stopped process so that system can kill it
-  kill -$2 $1 && kill -SIGCONT $1 || status=1
+  kill -$2 $1 && kill -s SIGCONT $1 || status=1
 
   return $status
 }
