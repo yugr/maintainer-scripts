@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2019 Yury Gribov
+# Copyright 2019-2022 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -82,7 +82,7 @@ while (<INP>) {
   $line =~ s/[\r\n]*//g;
   if ($line =~ /IR Dump (Before|After) (.*) \*\*\*/) {
     $when = $1;
-    print_pass();
+    print_pass() if defined $text;
     ++$num;
     $pass = $2;
     $pass =~ s/(\s+|\/)/-/g;
