@@ -10,8 +10,7 @@
 set -eu
 
 absolutize() {
-  test -e "$1"
-  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+  realpath -s "$1"
 }
 
 error() {

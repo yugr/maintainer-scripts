@@ -13,8 +13,7 @@ set -eu
 # * .tar.gz inputs
 
 absolutize() {
-  test -e "$1"
-  (cd $(dirname "$1"); echo $PWD/$(basename "$1"))
+  realpath -s "$1"
 }
 
 error() {
@@ -108,7 +107,8 @@ NJOBS=$(($(nproc) * 3 / 2))
 
 reset_opts
 
-while test "$1"; do
+  echo "$@"
+while test "${1:-}"; do
   case "$1" in
     -h|--help)
       print_help_and_exit

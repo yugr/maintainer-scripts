@@ -31,8 +31,7 @@ WHITE='\033[97m'
 UNDER='\033[2m'
 
 absolutize() {
-  test -e "$1"
-  (cd "$(dirname "$1")"; echo $PWD/$(basename "$1"))
+  realpath -s "$1"
 }
 
 error() {
