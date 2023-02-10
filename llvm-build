@@ -151,14 +151,22 @@ LOG=$(basename $0).log
 eval cmake $CMAKE_FLAGS \
     "$@" $SRC | tee $LOG
 
-nice make VERBOSE=1 -j$NJOBS 2>&1 | tee -a $LOG
+if test -f Makefile; then
+  MAKE=make
+elif test -f build.ninja; then
+  MAKE=ninja
+fi
+
+export VERBOSE=1
+
+nice $MAKE -j$NJOBS 2>&1 | tee -a $LOG
 
 if test -n "$INSTALL"; then
-  nice make VERBOSE=1 install 2>&1 | tee -a $LOG
+  nice $MAKE install 2>&1 | tee -a $LOG
 fi
 
 if test -n "$TEST"; then
-  nice make VERBOSE=1 check-all 2>&1 | tee -a $LOG
+  nice $MAKE check-all 2>&1 | tee -a $LOG
 fi
 
 DT=$(($(date +%s) - TIME_START))
