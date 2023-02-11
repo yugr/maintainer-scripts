@@ -148,6 +148,7 @@ TIME_START=$(date +%s)
 
 LOG=$(basename $0).log
 
+echo "cmake $CMAKE_FLAGS \"$@\" $SRC" >> cmake_command.log
 eval cmake $CMAKE_FLAGS \
     "$@" $SRC | tee $LOG
 
