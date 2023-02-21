@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# Copyright 2015-2022 Yury Gribov
+# Copyright 2015-2023 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-# Indexes GCC source code with ctags, respecting the supermacro
+# Indexes GCC source code with ctags, respecting the supermacro, build directory
 # and avoiding irrelevant files.
 
 set -eu
@@ -24,10 +24,9 @@ find gcc libiberty libcpp \
 if test $# -ge 1; then
   BUILD=$1
 else
-  BUILD=$HOME/build/$(basename $PWD)
+  BUILD=$PWD/build
 fi
 
-# TODO: allow running this from build dir to avoid relying on dir layout?
 if test -f "$BUILD/gcc/options.h"; then
   find $BUILD/gcc -name \*.h -o -name \*.c -print >> cscope.files
 else
@@ -35,7 +34,7 @@ else
 fi
 
 echo 'Building ctags database...'
-ctags --c++-kinds=+p --fields=+iaS --extra=+q -a -I GTY+,ATTRIBUTE_UNUSED -L cscope.files
+ctags --c++-kinds=+p --fields=+iaS --extras=+q -a -I GTY+,ATTRIBUTE_UNUSED -L cscope.files
 
 # Now manually merge contents of .def files
 TMP=mktemp

@@ -9,9 +9,9 @@ for typical toolchain/distro maintenance tasks:
 * `gcc-build`, `llvm-build`: build compilers
 * `gcc-bootstrap-and-regtest`: test a single GCC change (builds compiler, runs testsuite and compares results)
 * `gcc-bisect`: bisect GCC regression
-* `gcc-index`: set up ctags for GCC source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `gcc-debug`: debug GCC compiler proper instead of driver
 * `gcc-predefs`: print predefined GCC macros
+* `gcc-tags`: set up ctags for GCC source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `gcov-tool-many`: apply `gcov-tool` to more than 2 files
 * `git-all`: run Git command in all repos in current folder
 * `git-bareize` : convert normal git repo to bare format
