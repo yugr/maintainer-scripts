@@ -23,6 +23,7 @@ for typical toolchain/distro maintenance tasks:
 * `llvm-classify-error`: print short summary of LLVM error log
 * `llvm-print-fatpoints`: print fatpoints from LLVM MIR dump
 * `llvm-print-crit-path`: print critical path from based on MachineScheduler's dump
+* `llvm-tags`: set up ctags for LLVM source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `mangle`: mangle function prototype (primitive types only)
 * `py-lint`: wrapper around `pylint` to make it more usable
 * `plot-percentiles`: a simple pyplot-based script which plots percentile-based benchmark summaries
