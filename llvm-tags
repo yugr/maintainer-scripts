@@ -19,6 +19,7 @@ rm -f cscope.* ctags tags
 
 find llvm clang \
   -path llvm/test -prune -o -path clang/test -prune \
+  -o -path llvm/unittests -prune -o -path llvm/bindings -prune \
   -o \( -name \*.h -o -name \*.c -o -name \*.cpp \) -print > cscope.files
 
 if test $# -ge 1; then
@@ -34,6 +35,6 @@ else
 fi
 
 echo 'Building ctags database...'
-ctags --c++-kinds=+p --fields=+iaS --extras=+q -a -L cscope.files
+ctags --c++-kinds=+p --fields=+iaS --extras=+q -a -I LLVM_EXTERNAL_VISIBILITY,LLVM_LIBRARY_VISIBILITY -L cscope.files
 
 # TODO: merge contents of .def files
