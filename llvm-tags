@@ -17,9 +17,20 @@ fi
 
 rm -f cscope.* ctags tags
 
-find llvm clang \
-  -path llvm/test -prune -o -path clang/test -prune \
-  -o -path llvm/unittests -prune -o -path llvm/bindings -prune \
+if [ -d tools/clang ]; then
+  # Legacy layout from ancient times
+  LLVM_DIR=llvm
+  CLANG_DIR=tools/clang
+  ROOTS=llvm
+else
+  LLVM_DIR=llvm
+  CLANG_DIR=clang
+  ROOTS='llvm clang'
+fi
+
+find $ROOTS \
+  -path $LLVM_DIR/test -prune -o -path $CLANG_DIR/test -prune \
+  -o -path $LLVM_DIR/unittests -prune -o -path $LLVM_DIR/bindings -prune \
   -o \( -name \*.h -o -name \*.c -o -name \*.cpp \) -print > cscope.files
 
 if test $# -ge 1; then
@@ -28,13 +39,20 @@ else
   BUILD=$PWD/build
 fi
 
-if test -f "$BUILD/CMakeCache.txt"; then
+if [ -f "$BUILD/CMakeCache.txt" ]; then
   find $BUILD -name \*.inc -print >> cscope.files
 else
   echo >&2 "Unable to find build directory at $BUILD, index may be incomplete"
 fi
 
+if ctags --version | grep -q 'Universal Ctags'; then
+  EXTRA=extras
+else
+  # Exuberant Ctags
+  EXTRA=extra
+fi
+
 echo 'Building ctags database...'
-ctags --c++-kinds=+p --fields=+iaS --extras=+q -a -I LLVM_EXTERNAL_VISIBILITY,LLVM_LIBRARY_VISIBILITY -L cscope.files
+ctags --c++-kinds=+p --fields=+iaS --$EXTRA=+q -a -I LLVM_EXTERNAL_VISIBILITY,LLVM_LIBRARY_VISIBILITY -L cscope.files
 
 # TODO: merge contents of .def files
