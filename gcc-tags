@@ -27,14 +27,21 @@ else
   BUILD=$PWD/build
 fi
 
-if test -f "$BUILD/gcc/options.h"; then
+if [ -f "$BUILD/gcc/options.h" ]; then
   find $BUILD/gcc -name \*.h -o -name \*.c -print >> cscope.files
 else
   echo >&2 "Unable to find build directory at $BUILD, index may be incomplete"
 fi
 
+if ctags --version | grep -q 'Universal Ctags'; then
+  EXTRA=extras
+else
+  # Exuberant Ctags
+  EXTRA=extra
+fi
+
 echo 'Building ctags database...'
-ctags --c++-kinds=+p --fields=+iaS --extras=+q -a -I GTY+,ATTRIBUTE_UNUSED -L cscope.files
+ctags --c++-kinds=+p --fields=+iaS --$EXTRA=+q -a -I GTY+,ATTRIBUTE_UNUSED -L cscope.files
 
 # Now manually merge contents of .def files
 TMP=mktemp
