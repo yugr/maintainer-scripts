@@ -10,22 +10,20 @@
 
 set -eu
 
-if [ ! -f llvm/CMakeLists.txt ]; then
-  echo 'You must run me from LLVM root directory' >&2
-  exit 1
-fi
-
 rm -f cscope.* ctags tags
 
 if [ -d tools/clang ]; then
   # Legacy layout from ancient times
-  LLVM_DIR=llvm
+  LLVM_DIR=.
   CLANG_DIR=tools/clang
-  ROOTS=llvm
-else
+  ROOTS=.
+elif [ -f llvm/CMakeLists.txt ]; then
   LLVM_DIR=llvm
   CLANG_DIR=clang
   ROOTS='llvm clang'
+else
+  echo 'You must run me from LLVM root directory' >&2
+  exit 1
 fi
 
 find $ROOTS \
