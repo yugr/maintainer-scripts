@@ -19,7 +19,7 @@ rm -f cscope.* ctags tags
 
 find gcc libiberty libcpp \
   -path gcc/testsuite -prune -o -path 'lib*' -prune -o -path gcc/testsuite/config -prune \
-  -o \( -name \*.h -o -name \*.c \) -print > cscope.files
+  -o \( -name \*.h -o -name \*.c -o -name \*.cc \) -print > cscope.files
 
 if test $# -ge 1; then
   BUILD=$1
@@ -28,7 +28,7 @@ else
 fi
 
 if [ -f "$BUILD/gcc/options.h" ]; then
-  find $BUILD/gcc -name \*.h -o -name \*.c -print >> cscope.files
+  find $BUILD/gcc -name \*.h -o -name \*.c -o -name \*.cc -print >> cscope.files
 else
   echo >&2 "Unable to find build directory at $BUILD, index may be incomplete"
 fi
@@ -62,6 +62,6 @@ cat tags >> $TMP
 LC_COLLATE=C sort $TMP > tags
 
 #echo 'Building cscope database...'
-if which cscope 2>/dev/null 2>&1; then
+if which cscope >/dev/null 2>&1; then
   cscope -Igcc -Iinclude -q -R -b -i cscope.files
 fi
