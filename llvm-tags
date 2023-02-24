@@ -29,6 +29,7 @@ fi
 find $ROOTS \
   -path $LLVM_DIR/test -prune -o -path $CLANG_DIR/test -prune \
   -o -path $LLVM_DIR/unittests -prune -o -path $LLVM_DIR/bindings -prune \
+  -o -path $LLVM_DIR/examples -prune -o -path $CLANG_DIR/examples -prune \
   -o \( -name \*.h -o -name \*.c -o -name \*.cpp \) -print > cscope.files
 
 if test $# -ge 1; then

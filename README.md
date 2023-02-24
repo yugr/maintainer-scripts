@@ -11,7 +11,7 @@ for typical toolchain/distro maintenance tasks:
 * `gcc-bisect`: bisect GCC regression
 * `gcc-debug`: debug GCC compiler proper instead of driver
 * `gcc-predefs`: print predefined GCC macros
-* `gcc-tags`: set up ctags for GCC source dir (avoiding irrelevant subdirs and respecting supermacro)
+* `gcc-tags`, `llvm-tags`: set up ctags for GCC/LLVM source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `gcov-tool-many`: apply `gcov-tool` to more than 2 files
 * `git-all`: run Git command in all repos in current folder
 * `git-bareize` : convert normal git repo to bare format
@@ -23,7 +23,6 @@ for typical toolchain/distro maintenance tasks:
 * `llvm-classify-error`: print short summary of LLVM error log
 * `llvm-print-fatpoints`: print fatpoints from LLVM MIR dump
 * `llvm-print-crit-path`: print critical path from based on MachineScheduler's dump
-* `llvm-tags`: set up ctags for LLVM source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `mangle`: mangle function prototype (primitive types only)
 * `py-lint`: wrapper around `pylint` to make it more usable
 * `plot-percentiles`: a simple pyplot-based script which plots percentile-based benchmark summaries
