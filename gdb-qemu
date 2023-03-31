@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+set -x
+
+TARGET="$1"
+shift
+
+get_sysroot() {
+  TARGETS=$(ls -1 /usr | grep "^$TARGET" | sed 's!^!/usr/!')
+
+  if test -z "$TARGETS"; then
+    echo >&2 "Sysroot for $TARGET not found"
+    exit 1
+  fi
+
+  if test $(echo "$TARGETS" | wc -l) -gt 1; then
+    echo >&2 "More than one match for $TARGET: $TARGETS"
+    exit 1
+  fi
+
+  echo "$TARGETS"
+}
+
+PORT=1234
+SYSROOT=$(get_sysroot $TARGET)
+
+ARCH=$(echo $TARGET | sed 's/^\([^-]\+\).*/\1/')
+QEMU=qemu-$ARCH
+if ! which $QEMU > /dev/null 2>&2; then
+  echo >&2 "$QEMU not installed"
+  exit 1
+fi
+
+$QEMU -L $SYSROOT -g $PORT "$@" &
+sleep 1
+
+gdb-multiarch -ex "set sysroot $SYSROOT" -ex "target remote localhost:$PORT" "$1"

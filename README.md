@@ -13,6 +13,7 @@ for typical toolchain/distro maintenance tasks:
 * `gcc-predefs`: print predefined GCC macros
 * `gcc-tags`, `llvm-tags`: set up ctags for GCC/LLVM source dir (avoiding irrelevant subdirs and respecting supermacro)
 * `gcov-tool-many`: apply `gcov-tool` to more than 2 files
+* `gdb-qemu`: debug program under QEMU
 * `git-all`: run Git command in all repos in current folder
 * `git-bareize` : convert normal git repo to bare format
 * `git-reset-dates`: change date of last N commits
