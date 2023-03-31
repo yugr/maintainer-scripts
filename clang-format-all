@@ -11,4 +11,4 @@ set -eu
 set -x
 
 cd $(git rev-parse --show-toplevel)
-git show | grep '^diff' | awk '{print $4}' | cut -d/ -f2- | grep '\(\.cpp\|\.cc\|\.hpp\|.h\|\.hh\)$' | xargs clang-format -i
+git show | grep '^diff' | awk '{print $4}' | cut -d/ -f2- | grep '\(\.c\|\.cpp\|\.cc\|\.hpp\|.h\|\.hh\)$' | xargs clang-format -i
