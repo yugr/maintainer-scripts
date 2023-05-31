@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2022 Yury Gribov
+# Copyright 2015-2023 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -31,15 +31,15 @@ Usage: $(basename $0) [options] src-dir [cmake-options]
 Configure and build LLVM in current directory with typical development options.
 
 Options:
-  -h, --help           Print help and exit.
-  -C dir               Build in dir.
-  -j N, -jN            Number of jobs to run (default is 1.5 * number-of-cores).
-  --clean              Force clean of build directory.
-  --install            Install after build (off by default).
-  -g, --debug          Build unoptimized compiler (for debugging).
-  --targets 't1;...'   List of targets to build (or "all"); default is x64 only.
-  --projects 'p1;...'  List of projects to build (or "all"); default is clang.
-  --test               Run check-all after successful build.
+  -h, --help               Print help and exit.
+  -C dir                   Build in dir.
+  -j N, -jN                Number of jobs to run (default is 1.5 * number-of-cores).
+  --clean                  Force clean of build directory.
+  --install                Install after build (off by default).
+  -g, --debug              Build unoptimized compiler (for debugging).
+  -t, --targets 't1;...'   List of targets to build (or "all"); default is x64 only.
+  -p, --projects 'p1;...'  List of projects to build (or "all"); default is clang.
+  --test                   Run check-all after successful build.
 
 EOF
 }
@@ -47,10 +47,14 @@ EOF
 NJOBS=$((3 * $(nproc) / 2))
 
 INSTALL_DIR=$HOME/install/$(basename $PWD)
-CMAKE_FLAGS="-G Ninja -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DLLVM_ENABLE_ASSERTIONS=ON -DBUILD_SHARED_LIBS=ON -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_TARGETS_TO_BUILD=X86 -DCOMPILER_RT_BUILD_SHARED_ASAN=ON -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_APPEND_VC_REV=OFF"
+CMAKE_FLAGS="-DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DLLVM_ENABLE_ASSERTIONS=ON -DBUILD_SHARED_LIBS=ON -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_TARGETS_TO_BUILD=X86 -DCOMPILER_RT_BUILD_SHARED_ASAN=ON -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_APPEND_VC_REV=OFF"
 
 if which lld > /dev/null 2>&1; then
   CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_USE_LINKER=lld"
+fi
+
+if which ninja > /dev/null 2>&1; then
+  CMAKE_FLAGS="$CMAKE_FLAGS -G Ninja"
 fi
 
 BUILD_DIR=$PWD
@@ -82,11 +86,11 @@ while true; do
     TEST=1
     shift
     ;;
-  --projects)
+  --projects | -p)
     PROJECTS="$2"
     shift 2
     ;;
-  --targets)
+  --targets | -t)
     CMAKE_FLAGS="$CMAKE_FLAGS -DLLVM_TARGETS_TO_BUILD='$2'"
     shift 2
     ;;
@@ -131,11 +135,11 @@ cd $BUILD_DIR
 
 if [ $(ls | wc -l) -gt 0 ]; then
   if [ -z "$CLEAN" ]; then
-    error 'Build must be performed in empty directory; do `rm -rf *` or run with --clean'
+    error "Build must be performed in empty directory; do `rm -rf *` in $BUILD_DIR or run with --clean"
   else
     # Be cautious
     test -f ./CMakeCache.txt \
-      || error 'cowardly refusing to clean directory which does not look like a build dir'
+      || error "cowardly refusing to clean $BUILD_DIR which does not look like a build dir"
     rm -rf *
   fi
 fi
