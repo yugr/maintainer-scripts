@@ -21,6 +21,9 @@ elif [ -f llvm/CMakeLists.txt ]; then
   LLVM_DIR=llvm
   CLANG_DIR=clang
   ROOTS='llvm clang'
+  if test -d mlir; then
+    ROOTS="$ROOTS mlir"
+  fi
 else
   echo 'You must run me from LLVM root directory' >&2
   exit 1
