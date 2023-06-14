@@ -9,6 +9,7 @@
 
 import argparse
 import atexit
+import multiprocessing
 import os
 import os.path
 import re
@@ -191,7 +192,18 @@ Examples:
   test_file = tempfile.mktemp()
   atexit.register(lambda: os.unlink(test_file))
 
-  # TODO
+  files = []
+  for d, _, ff in os.walk('.'):
+    files.extend(os.path.join(d, f) for f in ff if f.endswith('.txt'))
+
+  def func:
+    pass  # TODO
+
+  with multiprocessing.Pool() as pool:
+    results = pool.map(func, files)
+
+with mp.Pool(processes=10) as pool:
+  results = pool.map(func, files)
 
   return 0
 
