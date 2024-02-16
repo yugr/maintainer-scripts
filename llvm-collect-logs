@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2019-2021 Yury Gribov
+# Copyright 2019-2024 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -26,7 +26,7 @@ else
 fi
 
 case "$1" in
-*clang | *clang.exe)
+*clang | *clang.exe | *clang++ | *clang++.exe)
   DEBUG_FLAGS='-mllvm -print-after-all'
   ;;
 *llc | *llc.exe)
