@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2023 Yury Gribov
+# Copyright 2015-2024 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -52,10 +52,12 @@ for def in \
     'gcc/gimple.def DEFGSCODE' \
     'gcc/rtl.def DEF_RTL_EXPR' \
     'gcc/builtins.def DEF[A-Z0-9_]*_BUILTIN' \
+    'gcc/cif-code.def DEFCIFCODE CIF_' \
     'gcc/internal-fn.def DEF_INTERNAL[A-Z0-9_]*_FN'; do
-  file=${def% *}
-  macro=${def#* }
-  cat $file | sed -ne "s!^\($macro *(\([^,]*\)\).*\$!\2	$file	/\1,/!p" >> $TMP
+  file=$(echo $def | awk '{print $1}')
+  macro=$(echo $def | awk '{print $2}')
+  prefix=$(echo $def | awk '{print $3}')
+  cat $file | sed -ne "s!^\($macro *(\([^,]*\)\).*\$!$prefix\2	$file	/\1,/!p" >> $TMP
 done
 
 cat tags >> $TMP
