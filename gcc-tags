@@ -60,6 +60,11 @@ for def in \
   cat $file | sed -ne "s!^\($macro *(\([^,]*\)\).*\$!$prefix\2	$file	/\1,/!p" >> $TMP
 done
 
+# And .opt files
+for file in gcc/params.opt gcc/common.opt; do
+  cat $file | sed -ne "s!^\(.*\<Var(\([^)]*\))\).*\$!\2	$file	/\1,/!p" >> $TMP
+done
+
 cat tags >> $TMP
 LC_COLLATE=C sort $TMP > tags
 
