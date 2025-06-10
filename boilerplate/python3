@@ -103,20 +103,10 @@ class Re:
   def groups(self, *args, **kwargs):
     return self._last_match.groups(*args, **kwargs)
 
-def run(cmd, **kwargs):
+def run(cmd, fatal=False, tee=False, **kwargs):
   """
   Simple wrapper for subprocess.
   """
-  if 'fatal' in kwargs:
-    fatal = kwargs['fatal']
-    del kwargs['fatal']
-  else:
-    fatal = False
-  if 'tee' in kwargs:
-    tee = kwargs['tee']
-    del kwargs['tee']
-  else:
-    tee = False
   if isinstance(cmd, str):
     cmd = cmd.split(' ')
 #  print(cmd)
