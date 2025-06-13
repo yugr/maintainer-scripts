@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from typing import NoReturn
 
 me = os.path.basename(__file__)
@@ -110,8 +111,10 @@ def run(cmd, fatal=False, tee=False, **kwargs):
   if isinstance(cmd, str):
     cmd = cmd.split(' ')
 #  print(cmd)
+  t1 = time.perf_counter_ns()
   p = subprocess.run(cmd, stdin=None, stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE, **kwargs)
+  t2 = time.perf_counter_ns()
   out = p.stdout.decode()
   err = p.stderr.decode()
   if fatal and p.returncode != 0:
@@ -119,7 +122,7 @@ def run(cmd, fatal=False, tee=False, **kwargs):
   if tee:
     sys.stdout.write(out)
     sys.stderr.write(err)
-  return p.returncode, out, err
+  return p.returncode, out, err, (t2 - t1) / 1e9
 
 def run_no_deadlocks(cmd, **kwargs):
   """
