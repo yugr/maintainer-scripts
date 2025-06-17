@@ -55,8 +55,7 @@ def ensure_module(module, package=None, user=True, quiet=False):
     if not quiet:
       print(f"Installing Python module {module}...")
     exe = sys.executable
-    if package is None:
-      package = module
+    package = package or module
     try:
       subprocess.check_call([exe, '-mensurepip'])
     except subprocess.CalledProcessError:
