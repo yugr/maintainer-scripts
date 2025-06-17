@@ -25,13 +25,13 @@ def warn(msg):
   """
   Print nicely-formatted warning message.
   """
-  sys.stderr.write('%s: warning: %s\n' % (me, msg))
+  sys.stderr.write(f'{me}: warning: {msg}\n')
 
 def error(msg) -> NoReturn:
   """
   Print nicely-formatted error message and exit.
   """
-  sys.stderr.write('%s: error: %s\n' % (me, msg))
+  sys.stderr.write(f'{me}: error: {msg}\n')
   sys.exit(1)
 
 def warn_if(cond, msg):
@@ -53,7 +53,7 @@ def ensure_module(module, package=None, user=True, quiet=False):
     imp.find_module(module)
   except ImportError:
     if not quiet:
-      print("Installing Python module %s..." % module)
+      print(f"Installing Python module {module}...")
     exe = sys.executable
     if package is None:
       package = module
@@ -70,7 +70,7 @@ def ensure_module(module, package=None, user=True, quiet=False):
     try:
       imp.find_module(module)
     except ImportError:
-      error("module '%s' not found in package '%s'" % (module, package))
+      error(f"module '{module}' not found in package '{package}'")
 
 class Re:
   """
@@ -118,7 +118,8 @@ def run(cmd, fatal=False, tee=False, **kwargs):
   out = p.stdout.decode()
   err = p.stderr.decode()
   if fatal and p.returncode != 0:
-    error("'%s' failed:\n%s%s" % (' '.join(cmd), out, err))
+    cmds = ' '.join(cmd)
+    error(f"'{cmds}' failed:\n{out}{err}")
   if tee:
     sys.stdout.write(out)
     sys.stderr.write(err)
@@ -149,17 +150,18 @@ def run_no_deadlocks(cmd, **kwargs):
     err = f.read()
   os.unlink(err_file)
   if fatal and p.returncode != 0:
-    error("'%s' failed:\n%s%s" % (' '.join(cmd), out, err))
+    cmds = ' '.join(cmd)
+    error(f"'{cmds}' failed:\n{out}{err}")
   return p.returncode, out, err
 
 def main():
   class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
   parser = argparse.ArgumentParser(description="Describe script here",
                                    formatter_class=Formatter,
-                                   epilog="""\
+                                   epilog=f"""\
 Examples:
-  $ python {0} arg
-""".format(me))
+  $ python {me} arg
+"""
   parser.add_argument('--flag', '-f',
                       help="Describe flag here",
                       dest='flag', action='store_true', default=False)
