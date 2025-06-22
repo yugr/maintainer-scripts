@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # Copyright 2017-2022 Yury Gribov
-# 
+#
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 #
@@ -21,177 +21,212 @@ from typing import NoReturn
 
 me = os.path.basename(__file__)
 
+
 def warn(msg):
-  """
-  Print nicely-formatted warning message.
-  """
-  sys.stderr.write(f'{me}: warning: {msg}\n')
+    """
+    Print nicely-formatted warning message.
+    """
+    sys.stderr.write(f"{me}: warning: {msg}\n")
+
 
 def error(msg) -> NoReturn:
-  """
-  Print nicely-formatted error message and exit.
-  """
-  sys.stderr.write(f'{me}: error: {msg}\n')
-  sys.exit(1)
+    """
+    Print nicely-formatted error message and exit.
+    """
+    sys.stderr.write(f"{me}: error: {msg}\n")
+    sys.exit(1)
+
 
 def warn_if(cond, msg):
-  if cond:
-    warn(msg)
+    if cond:
+        warn(msg)
+
 
 def error_if(cond, msg):
-  if cond:
-    error(msg)
+    if cond:
+        error(msg)
+
 
 def ensure_module(module, package=None, user=True, quiet=False):
-  """
-  Installs module if it's missing. Call like
-    ensure_module('configparser')
-    ensure_module('wx', 'wxPython')
-  """
-  import imp, site, subprocess
-  try:
-    imp.find_module(module)
-  except ImportError:
-    if not quiet:
-      print(f"Installing Python module {module}...")
-    exe = sys.executable
-    package = package or module
+    """
+    Installs module if it's missing. Call like
+      ensure_module('configparser')
+      ensure_module('wx', 'wxPython')
+    """
+    import imp, site, subprocess
+
     try:
-      subprocess.check_call([exe, '-mensurepip'])
-    except subprocess.CalledProcessError:
-      warn("failed to ensure pip")
-    subprocess.check_call(
-      [exe, '-mpip', 'install'] + (['--user'] if user else []) + [package])
-    # User site packages are often not in PATH by default
-    for d in (site.getusersitepackages() if user else site.getsitepackages()):
-      if d not in sys.path:
-        sys.path.append(d)
-    try:
-      imp.find_module(module)
+        imp.find_module(module)
     except ImportError:
-      error(f"module '{module}' not found in package '{package}'")
+        if not quiet:
+            print(f"Installing Python module {module}...")
+        exe = sys.executable
+        package = package or module
+        try:
+            subprocess.check_call([exe, "-mensurepip"])
+        except subprocess.CalledProcessError:
+            warn("failed to ensure pip")
+        subprocess.check_call(
+            [exe, "-mpip", "install"] + (["--user"] if user else []) + [package]
+        )
+        # User site packages are often not in PATH by default
+        for d in site.getusersitepackages() if user else site.getsitepackages():
+            if d not in sys.path:
+                sys.path.append(d)
+        try:
+            imp.find_module(module)
+        except ImportError:
+            error(f"module '{module}' not found in package '{package}'")
+
 
 class Re:
-  """
-  "Regex cacher" gets rid of temporary match objects e.g.
-    if Re.match(...):
-      x = Re.group(1)
-  """
+    """
+    "Regex cacher" gets rid of temporary match objects e.g.
+      if Re.match(...):
+        x = Re.group(1)
+    """
 
-  _last_match = None
+    _last_match = None
 
-  @classmethod
-  def match(self, *args, **kwargs):
-    self._last_match = re.match(*args, **kwargs)
-    return self._last_match
+    @classmethod
+    def match(self, *args, **kwargs):
+        self._last_match = re.match(*args, **kwargs)
+        return self._last_match
 
-  @classmethod
-  def search(self, *args, **kwargs):
-    self._last_match = re.search(*args, **kwargs)
-    return self._last_match
+    @classmethod
+    def search(self, *args, **kwargs):
+        self._last_match = re.search(*args, **kwargs)
+        return self._last_match
 
-  @classmethod
-  def fullmatch(self, *args, **kwargs):
-    self._last_match = re.fullmatch(*args, **kwargs)
-    return self._last_match
+    @classmethod
+    def fullmatch(self, *args, **kwargs):
+        self._last_match = re.fullmatch(*args, **kwargs)
+        return self._last_match
 
-  @classmethod
-  def group(self, *args, **kwargs):
-    return self._last_match.group(*args, *kwargs)
+    @classmethod
+    def group(self, *args, **kwargs):
+        return self._last_match.group(*args, *kwargs)
 
-  @classmethod
-  def groups(self, *args, **kwargs):
-    return self._last_match.groups(*args, **kwargs)
+    @classmethod
+    def groups(self, *args, **kwargs):
+        return self._last_match.groups(*args, **kwargs)
+
 
 def run(cmd, fatal=True, tee=False, **kwargs):
-  """
-  Simple wrapper for subprocess.
-  """
-  if isinstance(cmd, str):
-    cmd = cmd.split(' ')
-#  print(cmd)
-  t1 = time.perf_counter_ns()
-  p = subprocess.run(cmd, stdin=None, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, **kwargs)
-  t2 = time.perf_counter_ns()
-  out = p.stdout.decode()
-  err = p.stderr.decode()
-  if fatal and p.returncode != 0:
-    cmds = ' '.join(cmd)
-    error(f"'{cmds}' failed:\n{out}{err}")
-  if tee:
-    sys.stdout.write(out)
-    sys.stderr.write(err)
-  return p.returncode, out, err, (t2 - t1) / 1e9
+    """
+    Simple wrapper for subprocess.
+    """
+    if isinstance(cmd, str):
+        cmd = cmd.split(" ")
+    #  print(cmd)
+    t1 = time.perf_counter_ns()
+    p = subprocess.run(
+        cmd, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
+    )
+    t2 = time.perf_counter_ns()
+    out = p.stdout.decode()
+    err = p.stderr.decode()
+    if fatal and p.returncode != 0:
+        cmds = " ".join(cmd)
+        error(f"'{cmds}' failed:\n{out}{err}")
+    if tee:
+        sys.stdout.write(out)
+        sys.stderr.write(err)
+    return p.returncode, out, err, (t2 - t1) / 1e9
+
 
 def run_no_deadlocks(cmd, fatal=True, **kwargs):
-  """
-  A simple wrapper for subprocess to avoid deadlocks
-  with subprocess.PIPE.
-  """
-  if isinstance(cmd, str):
-    cmd = cmd.split(' ')
-#  print(cmd)
-  out_file = tempfile.mktemp()
-  err_file = tempfile.mktemp()
-  with open(out_file, 'w') as out_fileno, open(err_file, 'w') as err_fileno:
-    p = subprocess.Popen(cmd, stdout=out_fileno, stderr=err_fileno, **kwargs)
-    p.communicate()
-  with open(out_file, 'r') as f:
-    out = f.read()
-  os.unlink(out_file)
-  with open(err_file, 'r') as f:
-    err = f.read()
-  os.unlink(err_file)
-  if fatal and p.returncode != 0:
-    cmds = ' '.join(cmd)
-    error(f"'{cmds}' failed:\n{out}{err}")
-  return p.returncode, out, err
+    """
+    A simple wrapper for subprocess to avoid deadlocks
+    with subprocess.PIPE.
+    """
+    if isinstance(cmd, str):
+        cmd = cmd.split(" ")
+    #  print(cmd)
+    out_file = tempfile.mktemp()
+    err_file = tempfile.mktemp()
+    with open(out_file, "w") as out_fileno, open(err_file, "w") as err_fileno:
+        p = subprocess.Popen(cmd, stdout=out_fileno, stderr=err_fileno, **kwargs)
+        p.communicate()
+    with open(out_file, "r") as f:
+        out = f.read()
+    os.unlink(out_file)
+    with open(err_file, "r") as f:
+        err = f.read()
+    os.unlink(err_file)
+    if fatal and p.returncode != 0:
+        cmds = " ".join(cmd)
+        error(f"'{cmds}' failed:\n{out}{err}")
+    return p.returncode, out, err
+
 
 def main():
-  class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
-  parser = argparse.ArgumentParser(description="Describe script here",
-                                   formatter_class=Formatter,
-                                   epilog=f"""\
+    class Formatter(
+        argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter
+    ):
+        pass
+
+    parser = argparse.ArgumentParser(
+        description="Describe script here",
+        formatter_class=Formatter,
+        epilog=f"""\
 Examples:
   $ python {me} arg
-""")
-  parser.add_argument('--flag', '-f',
-                      help="Describe flag here",
-                      dest='flag', action='store_true', default=False)
-  parser.add_argument('--no-flag',
-                      help="Inverse of --flag",
-                      dest='flag', action='store_false')
-  parser.add_argument('--param', '-p', metavar='PARAM_NAME',
-                      help="Describe scalar parameter here",
-                      default='0')
-  parser.add_argument('--multi', '-m', metavar='MULTI_PARAM_NAME',
-                      help="Describe array parameter here (can be specified more than once)",
-                      action='append', default=[])
-  parser.add_argument('--verbose', '-v',
-                      help="Print diagnostic info (can be specified more than once)",
-                      action='count', default=0)
-  parser.add_argument('arg',
-                      help="First positional argument", metavar='ARG')
-  parser.add_argument('rest',
-                      nargs=argparse.REMAINDER, default=[])
+""",
+    )
+    parser.add_argument(
+        "--flag",
+        "-f",
+        help="Describe flag here",
+        dest="flag",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--no-flag", help="Inverse of --flag", dest="flag", action="store_false"
+    )
+    parser.add_argument(
+        "--param",
+        "-p",
+        metavar="PARAM_NAME",
+        help="Describe scalar parameter here",
+        default="0",
+    )
+    parser.add_argument(
+        "--multi",
+        "-m",
+        metavar="MULTI_PARAM_NAME",
+        help="Describe array parameter here (can be specified more than once)",
+        action="append",
+        default=[],
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        help="Print diagnostic info (can be specified more than once)",
+        action="count",
+        default=0,
+    )
+    parser.add_argument("arg", help="First positional argument", metavar="ARG")
+    parser.add_argument("rest", nargs=argparse.REMAINDER, default=[])
 
-  args = parser.parse_args()
+    args = parser.parse_args()
 
-  test_file = tempfile.mktemp()
-  atexit.register(lambda: os.unlink(test_file))
+    test_file = tempfile.mktemp()
+    atexit.register(lambda: os.unlink(test_file))
 
-  files = []
-  for d, _, ff in os.walk('.'):
-    files.extend(os.path.join(d, f) for f in ff if f.endswith('.txt'))
+    files = []
+    for d, _, ff in os.walk("."):
+        files.extend(os.path.join(d, f) for f in ff if f.endswith(".txt"))
 
-  def func():
-    pass  # TODO
+    def func():
+        pass  # TODO
 
-  with multiprocessing.Pool(processes=10) as pool:
-    results = pool.map(func, files)
+    with multiprocessing.Pool(processes=10) as pool:
+        results = pool.map(func, files)
 
-  return 0
+    return 0
 
-if __name__ == '__main__':
-  sys.exit(main())
+
+if __name__ == "__main__":
+    sys.exit(main())
