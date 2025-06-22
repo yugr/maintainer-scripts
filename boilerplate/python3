@@ -103,7 +103,7 @@ class Re:
   def groups(self, *args, **kwargs):
     return self._last_match.groups(*args, **kwargs)
 
-def run(cmd, fatal=False, tee=False, **kwargs):
+def run(cmd, fatal=True, tee=False, **kwargs):
   """
   Simple wrapper for subprocess.
   """
@@ -124,16 +124,11 @@ def run(cmd, fatal=False, tee=False, **kwargs):
     sys.stderr.write(err)
   return p.returncode, out, err, (t2 - t1) / 1e9
 
-def run_no_deadlocks(cmd, **kwargs):
+def run_no_deadlocks(cmd, fatal=True, **kwargs):
   """
   A simple wrapper for subprocess to avoid deadlocks
   with subprocess.PIPE.
   """
-  if 'fatal' in kwargs:
-    fatal = kwargs['fatal']
-    del kwargs['fatal']
-  else:
-    fatal = False
   if isinstance(cmd, str):
     cmd = cmd.split(' ')
 #  print(cmd)
