@@ -155,7 +155,7 @@ def main():
                                    epilog=f"""\
 Examples:
   $ python {me} arg
-"""
+""")
   parser.add_argument('--flag', '-f',
                       help="Describe flag here",
                       dest='flag', action='store_true', default=False)
@@ -185,14 +185,11 @@ Examples:
   for d, _, ff in os.walk('.'):
     files.extend(os.path.join(d, f) for f in ff if f.endswith('.txt'))
 
-  def func:
+  def func():
     pass  # TODO
 
-  with multiprocessing.Pool() as pool:
+  with multiprocessing.Pool(processes=10) as pool:
     results = pool.map(func, files)
-
-with mp.Pool(processes=10) as pool:
-  results = pool.map(func, files)
 
   return 0
 
