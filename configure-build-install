@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2022 Yury Gribov
+# Copyright 2015-2025 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -58,6 +58,11 @@ build_project() {
 
   if test -f $SOURCE/configure; then
     (cd $BUILD && $SOURCE/configure --prefix=$INSTALL "$@")
+  elif test -f $SOURCE/configure.ac -a -f $SOURCE/autogen.sh; then
+    (
+      cd $SOURCE && ./autogen.sh
+      cd $BUILD && $SOURCE/configure --prefix=$INSTALL "$@"
+    )
   elif test -f $SOURCE/CMakeLists.txt; then
     (cd $BUILD && cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=$INSTALL $SOURCE)
   else
