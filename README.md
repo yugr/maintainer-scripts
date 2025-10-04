@@ -5,6 +5,7 @@ for typical toolchain/distro maintenance tasks:
 * `configure-build-install`: configure, build and install a typical Autoconf project
 * `cpptags`, `pytags`: wrappers for `ctags` to generate tags for different languages
 * `deja-compare-checks`, `gcc-compare-checks`: compare two sets of Dejagnu reports
+* `filter-disasm`: canonize objdump disasm
 * `find-binaries`: find all binary files in folder
 * `gcc-build`, `llvm-build`: build compilers
 * `gcc-bootstrap-and-regtest`: test a single GCC change (builds compiler, runs testsuite and compares results)
