@@ -1,5 +1,6 @@
 This repo contains a bunch of scripts which can be useful
 for typical toolchain/distro maintenance tasks:
+* `apt-install-local`: script to install APT packages into local directory
 * `boilerplate/*` : boilerplate codes for various languages
 * `clang-format-all`: format files from top commit via clang-format
 * `configure-build-install`: configure, build and install a typical Autoconf project
