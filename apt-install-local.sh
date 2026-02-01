@@ -13,6 +13,8 @@
 # It can also (try to) run pre/post-install scripts (firstly fixing paths in them).
 # Even after that you may need to fix configs in /etc to understand that
 # they should use local directory instead of root.
+#
+# See https://askubuntu.com/a/404826/2422710 for some details.
 
 set -eu
 #set -x
