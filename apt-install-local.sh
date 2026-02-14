@@ -134,7 +134,7 @@ export LD_LIBRARY_PATH=$PREFIX/lib:$PREFIX/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRAR
 for pkg in $pkgs; do
   debs=$(ls -1 $DOWNLOAD/*.deb | grep -F "$pkg")
   for pkg_deb in $debs; do
-    pkg_full=$(basename $pkg_deb | sed -e 's/\.deb$//')
+    pkg_full=basename $pkg_deb '.deb'
     dpkg-deb -R $pkg_deb $UNPACK/$pkg_full
 
     if test "$RUN" = 1; then
