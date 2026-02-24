@@ -118,6 +118,8 @@ def run(cmd, fatal=True, tee=False, **kwargs):
     """
     if isinstance(cmd, str):
         cmd = cmd.split(" ")
+    else:
+        cmd = [str(arg) for arg in cmd]
     #  print(cmd)
     t1 = time.perf_counter_ns()
     p = subprocess.run(
@@ -142,6 +144,8 @@ def run_no_deadlocks(cmd, fatal=True, **kwargs):
     """
     if isinstance(cmd, str):
         cmd = cmd.split(" ")
+    else:
+        cmd = [str(arg) for arg in cmd]
     #  print(cmd)
     out_file = tempfile.mktemp()
     err_file = tempfile.mktemp()
@@ -199,6 +203,14 @@ Examples:
         help="Describe array parameter here (can be specified more than once)",
         action="append",
         default=[],
+    )
+    parser.add_argument(
+        "--choice-param",
+        "-c",
+        metavar="PARAM_NAME",
+        help="Describe multi-choice parameter here",
+        choices=["0", "1", "2"],
+        default="0",
     )
     parser.add_argument(
         "--verbose",
