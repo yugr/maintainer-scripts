@@ -163,8 +163,8 @@ done
 
 # TODO: PYTHONPATH, etc.
 cat >$PREFIX/env <<EOF
-export PATH=$PREFIX/bin:$PREFIX/sbin:$PREFIX/usr/bin:$PREFIX/usr/sbin${PATH:+:$PATH}
-export LD_LIBRARY_PATH=$PREFIX/lib:$PREFIX/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig:$PREFIX/usr/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
-export MANPATH=$PREFIX/usr/share/man${MANPATH:+:$MANPATH}
+export PATH=$PREFIX/bin:$PREFIX/sbin:$PREFIX/usr/bin:$PREFIX/usr/sbin\${PATH:+:\$PATH}
+export LD_LIBRARY_PATH=$PREFIX/lib:$PREFIX/usr/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}
+export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig:$PREFIX/usr/lib/pkgconfig\${PKG_CONFIG_PATH:+:\$PKG_CONFIG_PATH}
+export MANPATH=$PREFIX/usr/share/man\${MANPATH:+:\$MANPATH}
 EOF
