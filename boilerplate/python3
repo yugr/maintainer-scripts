@@ -183,11 +183,8 @@ Examples:
         "-f",
         help="Describe flag here",
         dest="flag",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=False,
-    )
-    parser.add_argument(
-        "--no-flag", help="Inverse of --flag", dest="flag", action="store_false"
     )
     parser.add_argument(
         "--param",
