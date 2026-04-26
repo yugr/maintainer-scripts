@@ -113,7 +113,7 @@ gcov_merge() {
   w1=${W%%,*}
   W=${W#*,}
 
-  for i in $(seq 1 $#); do
+  for i in $(seq $#); do
     args=
     if test "$w1"; then
       w2=${W%%,*}
