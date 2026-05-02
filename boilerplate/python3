@@ -117,7 +117,7 @@ def run(cmd, fatal=True, tee=False, **kwargs):
     Simple wrapper for subprocess.
     """
     if isinstance(cmd, str):
-        cmd = cmd.split(" ")
+        cmd = re.split(r" +", cmd)
     else:
         cmd = [str(arg) for arg in cmd]
     #  print(cmd)
