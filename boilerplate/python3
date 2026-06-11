@@ -175,7 +175,7 @@ def main():
         formatter_class=Formatter,
         epilog=f"""\
 Examples:
-  $ python {me} arg
+  $ %(prog)s arg
 """,
     )
     parser.add_argument(
